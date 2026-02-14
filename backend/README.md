@@ -26,6 +26,7 @@ Server: `http://localhost:5000` (default). Use `--host=0.0.0.0` only if you need
 | GET    | /           | Root          |
 | GET    | /health     | Health check  |
 | GET    | /api/health | API health    |
+| POST   | /api/test   | POST test (echo body) |
 
 ## Structure
 
