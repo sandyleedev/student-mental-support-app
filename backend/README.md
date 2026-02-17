@@ -26,8 +26,9 @@ Server: `http://localhost:5000` (default). Use `--host=0.0.0.0` only if you need
 | GET    | /           | Root          |
 | GET    | /health     | Health check  |
 | GET    | /api/health | API health    |
-| GET    | /api/threads | List threads (?user_id=, optional ?status=ALL\|WAITING\|REPLIED for counsellor) |
-| POST   | /api/threads | Create support thread (student_id, topic) |
+| GET    | /api/threads     | List threads (?user_id=, optional ?status=ALL\|WAITING\|REPLIED for counsellor) |
+| GET    | /api/threads/:id | Thread detail with messages (chronological) |
+| POST   | /api/threads     | Create support thread (student_id, topic) |
 | POST   | /api/test    | POST test (echo body) |
 
 ## Structure
@@ -43,7 +44,8 @@ backend/
     ├── models/
     │   ├── __init__.py
     │   ├── user.py
-    │   └── support_thread.py
+    │   ├── support_thread.py
+    │   └── message.py
     └── routes/
         ├── __init__.py
         ├── general.py

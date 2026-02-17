@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from app import app, db
-from app.models import SupportThread
+from app.models import SupportThread, Message
 from app.models.user import User
 
 
@@ -14,6 +14,50 @@ def _thread_to_dict(thread):
         "created_at": thread.created_at.isoformat() if thread.created_at else None,
         "updated_at": thread.updated_at.isoformat() if thread.updated_at else None,
     }
+
+
+def _message_to_dict(msg):
+    """Serialize Message to API response dict."""
+    return {
+        "id": msg.id,
+        "thread_id": msg.thread_id,
+        "sender_id": msg.sender_id,
+        "content": msg.content,
+        "created_at": msg.created_at.isoformat() if msg.created_at else None,
+    }
+
+
+@app.route("/api/threads/<int:thread_id>", methods=["GET"])
+def get_thread(thread_id):
+    """Get thread detail with messages (chronological order).
+    ---
+    tags:
+      - threads
+    parameters:
+      - in: path
+        name: thread_id
+        type: integer
+        required: true
+        description: Thread ID
+    responses:
+      200:
+        description: Thread and messages
+      404:
+        description: Thread not found
+    """
+    thread = SupportThread.query.get(thread_id)
+    if not thread:
+        return jsonify({"error": "Thread not found"}), 404
+    messages = Message.query.filter_by(thread_id=thread_id).order_by(Message.created_at.asc()).all()
+    return (
+        jsonify(
+            {
+                "thread": _thread_to_dict(thread),
+                "messages": [_message_to_dict(m) for m in messages],
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/api/threads", methods=["GET"])
