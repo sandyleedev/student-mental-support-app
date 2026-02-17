@@ -2,6 +2,10 @@
 
 Flask API server for the Student Mental Support App.
 
+## Database
+
+See **[Local DB setup guide](../docs/db-setup.md)** for installing PostgreSQL (macOS/Windows), creating the database, running schema and seed scripts, and verification.
+
 ## Setup
 
 ```bash
