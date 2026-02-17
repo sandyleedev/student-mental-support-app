@@ -4,6 +4,69 @@ from app.models import SupportThread
 from app.models.user import User
 
 
+def _thread_to_dict(thread):
+    """Serialize SupportThread to API response dict."""
+    return {
+        "id": thread.id,
+        "student_id": thread.student_id,
+        "topic": thread.topic,
+        "status": thread.status,
+        "created_at": thread.created_at.isoformat() if thread.created_at else None,
+        "updated_at": thread.updated_at.isoformat() if thread.updated_at else None,
+    }
+
+
+@app.route("/api/threads", methods=["GET"])
+def list_threads():
+    """List threads (filtered by user role)
+    ---
+    tags:
+      - threads
+    parameters:
+      - in: query
+        name: user_id
+        type: integer
+        required: true
+        description: ID of the user (student sees own threads, counsellor sees all)
+      - in: query
+        name: status
+        type: string
+        enum: [ALL, WAITING, REPLIED]
+        description: For counsellor only. ALL or omit = no filter, WAITING/REPLIED = filter by status (tab view).
+    responses:
+      200:
+        description: List of threads
+      400:
+        description: Missing or invalid user_id / invalid status
+      404:
+        description: User not found
+    """
+    user_id = request.args.get("user_id")
+    if user_id is None:
+        return jsonify({"error": "user_id is required"}), 400
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "user_id must be an integer"}), 400
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.role == "STUDENT":
+        query = SupportThread.query.filter_by(student_id=user_id)
+    else:
+        query = SupportThread.query
+        status = request.args.get("status")
+        if status is not None and status != "ALL":
+            if status not in ("WAITING", "REPLIED"):
+                return jsonify({"error": "status must be ALL, WAITING, or REPLIED"}), 400
+            query = query.filter_by(status=status)
+    threads = query.order_by(SupportThread.created_at.desc()).all()
+
+    return jsonify({"threads": [_thread_to_dict(t) for t in threads]}), 200
+
+
 @app.route("/api/threads", methods=["POST"])
 def create_thread():
     """Create a new support thread
@@ -60,15 +123,4 @@ def create_thread():
     db.session.add(thread)
     db.session.commit()
 
-    return (
-        jsonify(
-            {
-                "id": thread.id,
-                "student_id": thread.student_id,
-                "topic": thread.topic,
-                "status": thread.status,
-                "created_at": thread.created_at.isoformat() if thread.created_at else None,
-            }
-        ),
-        201,
-    )
+    return jsonify(_thread_to_dict(thread)), 201
