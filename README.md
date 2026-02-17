@@ -8,3 +8,6 @@ Campus Compass is a student mental support app designed to help students find th
 - **Frontend (FE)**: React
 - **Backend (BE)**: Python
 - **Database (DB)**: PostgreSQL
+
+## Documentation
+- **[Local DB setup (macOS / Windows)](docs/db-setup.md)** – Install PostgreSQL, create the database, run schema and seed scripts, and verify.
