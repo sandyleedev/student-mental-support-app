@@ -97,6 +97,8 @@ def create_message(thread_id):
         description: Message created
       400:
         description: Validation error (missing or invalid sender_id/content)
+      403:
+        description: Forbidden (student can only send messages to their own threads)
       404:
         description: Thread or sender not found
     """
@@ -122,6 +124,8 @@ def create_message(thread_id):
         return jsonify({"error": "Sender not found"}), 404
     if sender.role not in ("STUDENT", "COUNSELLOR"):
         return jsonify({"error": "Sender must be a STUDENT or COUNSELLOR"}), 400
+    if sender.role == "STUDENT" and thread.student_id != sender_id:
+        return jsonify({"error": "Students can only send messages to their own threads"}), 403
 
     message = Message(thread_id=thread_id, sender_id=sender_id, content=str(content).strip())
     db.session.add(message)
