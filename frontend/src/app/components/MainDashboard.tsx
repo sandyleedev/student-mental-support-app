@@ -45,6 +45,7 @@ export function MainDashboard() {
 
   const handleSignOut = () => {
     setIsLoggedIn(false);
+    setShowProfileMenu(false);
     localStorage.removeItem("user_id");
   };
 
