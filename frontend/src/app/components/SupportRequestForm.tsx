@@ -28,11 +28,11 @@ export function SupportRequestForm() {
       try {
         const userId = localStorage.getItem("user_id") || "1";
 
-        const response = await fetch("http://localhost:5000/api/threads", {
+        const response = await fetch("http://localhost:5001/api/threads", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            user_id: parseInt(userId),
+            student_id: parseInt(userId),
             topic: formData.topic,
             description: formData.description,
             // urgency: formData.urgencyLevel.toUpperCase(),
