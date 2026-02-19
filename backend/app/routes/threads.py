@@ -188,7 +188,7 @@ def list_threads():
 
 @app.route("/api/threads", methods=["POST"])
 def create_thread():
-    """Create a new support thread
+    """Create a new support thread with initial message
     ---
     tags:
       - threads
@@ -203,6 +203,7 @@ def create_thread():
           required:
             - student_id
             - topic
+            - description
           properties:
             student_id:
               type: integer
@@ -210,22 +211,28 @@ def create_thread():
             topic:
               type: string
               description: Subject of the support request
+            description:
+              type: string
+              description: First message content (saved as the thread's first message)
     responses:
       201:
-        description: Thread created
+        description: Thread created with first message
       400:
-        description: Validation error (missing or invalid student_id/topic)
+        description: Validation error (missing or invalid student_id/topic/description)
       404:
         description: Student not found
     """
     data = request.get_json(silent=True) or {}
     student_id = data.get("student_id")
     topic = data.get("topic")
+    description = data.get("description")
 
     if student_id is None:
         return jsonify({"error": "student_id is required"}), 400
     if not topic or not str(topic).strip():
         return jsonify({"error": "topic is required and must be non-empty"}), 400
+    if description is None or not str(description).strip():
+        return jsonify({"error": "description is required and must be non-empty"}), 400
 
     try:
         student_id = int(student_id)
@@ -238,8 +245,19 @@ def create_thread():
     if student.role != "STUDENT":
         return jsonify({"error": "User is not a student"}), 400
 
-    thread = SupportThread(student_id=student_id, topic=str(topic).strip(), status="WAITING")
+    topic_str = str(topic).strip()
+    description_str = str(description).strip()
+
+    thread = SupportThread(student_id=student_id, topic=topic_str, status="WAITING")
     db.session.add(thread)
+    db.session.flush()
+
+    message = Message(
+        thread_id=thread.id,
+        sender_id=student_id,
+        content=description_str,
+    )
+    db.session.add(message)
     db.session.commit()
 
     return jsonify(_thread_to_dict(thread)), 201
