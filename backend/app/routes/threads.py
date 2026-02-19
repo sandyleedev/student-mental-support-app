@@ -27,114 +27,6 @@ def _message_to_dict(msg):
     }
 
 
-@app.route("/api/threads/<int:thread_id>", methods=["GET"])
-def get_thread(thread_id):
-    """Get thread detail with messages (chronological order).
-    ---
-    tags:
-      - threads
-    parameters:
-      - in: path
-        name: thread_id
-        type: integer
-        required: true
-        description: Thread ID
-    responses:
-      200:
-        description: Thread and messages
-      404:
-        description: Thread not found
-    """
-    thread = SupportThread.query.get(thread_id)
-    if not thread:
-        return jsonify({"error": "Thread not found"}), 404
-    messages = Message.query.filter_by(thread_id=thread_id).order_by(Message.created_at.asc()).all()
-    return (
-        jsonify(
-            {
-                "thread": _thread_to_dict(thread),
-                "messages": [_message_to_dict(m) for m in messages],
-            }
-        ),
-        200,
-    )
-
-
-@app.route("/api/threads/<int:thread_id>/messages", methods=["POST"])
-def create_message(thread_id):
-    """Add a message to a thread. Updates thread status (STUDENT → WAITING, COUNSELLOR → REPLIED).
-    ---
-    tags:
-      - threads
-    consumes:
-      - application/json
-    parameters:
-      - in: path
-        name: thread_id
-        type: integer
-        required: true
-        description: Thread ID
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          required:
-            - sender_id
-            - content
-          properties:
-            sender_id:
-              type: integer
-              description: ID of the user sending the message (STUDENT or COUNSELLOR)
-            content:
-              type: string
-              description: Message content
-          example:
-            sender_id: 1
-            content: I'm still stuck on the second assignment. Can we talk more?
-    responses:
-      201:
-        description: Message created
-      400:
-        description: Validation error (missing or invalid sender_id/content)
-      403:
-        description: Forbidden (student can only send messages to their own threads)
-      404:
-        description: Thread or sender not found
-    """
-    data = request.get_json(silent=True) or {}
-    sender_id = data.get("sender_id")
-    content = data.get("content")
-
-    if sender_id is None:
-        return jsonify({"error": "sender_id is required"}), 400
-    if content is None or not str(content).strip():
-        return jsonify({"error": "content is required and must be non-empty"}), 400
-
-    try:
-        sender_id = int(sender_id)
-    except (TypeError, ValueError):
-        return jsonify({"error": "sender_id must be an integer"}), 400
-
-    thread = SupportThread.query.get(thread_id)
-    if not thread:
-        return jsonify({"error": "Thread not found"}), 404
-    sender = User.query.get(sender_id)
-    if not sender:
-        return jsonify({"error": "Sender not found"}), 404
-    if sender.role not in ("STUDENT", "COUNSELLOR"):
-        return jsonify({"error": "Sender must be a STUDENT or COUNSELLOR"}), 400
-    if sender.role == "STUDENT" and thread.student_id != sender_id:
-        return jsonify({"error": "Students can only send messages to their own threads"}), 403
-
-    message = Message(thread_id=thread_id, sender_id=sender_id, content=str(content).strip())
-    db.session.add(message)
-    thread.status = "WAITING" if sender.role == "STUDENT" else "REPLIED"
-    db.session.commit()
-
-    return jsonify(_message_to_dict(message)), 201
-
-
 @app.route("/api/threads", methods=["GET"])
 def list_threads():
     """List threads (filtered by user role)
@@ -261,3 +153,111 @@ def create_thread():
     db.session.commit()
 
     return jsonify(_thread_to_dict(thread)), 201
+
+
+@app.route("/api/threads/<int:thread_id>", methods=["GET"])
+def get_thread(thread_id):
+    """Get thread detail with messages (chronological order).
+    ---
+    tags:
+      - threads
+    parameters:
+      - in: path
+        name: thread_id
+        type: integer
+        required: true
+        description: Thread ID
+    responses:
+      200:
+        description: Thread and messages
+      404:
+        description: Thread not found
+    """
+    thread = SupportThread.query.get(thread_id)
+    if not thread:
+        return jsonify({"error": "Thread not found"}), 404
+    messages = Message.query.filter_by(thread_id=thread_id).order_by(Message.created_at.asc()).all()
+    return (
+        jsonify(
+            {
+                "thread": _thread_to_dict(thread),
+                "messages": [_message_to_dict(m) for m in messages],
+            }
+        ),
+        200,
+    )
+
+
+@app.route("/api/threads/<int:thread_id>/messages", methods=["POST"])
+def create_message(thread_id):
+    """Add a message to a thread. Updates thread status (STUDENT → WAITING, COUNSELLOR → REPLIED).
+    ---
+    tags:
+      - threads
+    consumes:
+      - application/json
+    parameters:
+      - in: path
+        name: thread_id
+        type: integer
+        required: true
+        description: Thread ID
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - sender_id
+            - content
+          properties:
+            sender_id:
+              type: integer
+              description: ID of the user sending the message (STUDENT or COUNSELLOR)
+            content:
+              type: string
+              description: Message content
+          example:
+            sender_id: 1
+            content: I'm still stuck on the second assignment. Can we talk more?
+    responses:
+      201:
+        description: Message created
+      400:
+        description: Validation error (missing or invalid sender_id/content)
+      403:
+        description: Forbidden (student can only send messages to their own threads)
+      404:
+        description: Thread or sender not found
+    """
+    data = request.get_json(silent=True) or {}
+    sender_id = data.get("sender_id")
+    content = data.get("content")
+
+    if sender_id is None:
+        return jsonify({"error": "sender_id is required"}), 400
+    if content is None or not str(content).strip():
+        return jsonify({"error": "content is required and must be non-empty"}), 400
+
+    try:
+        sender_id = int(sender_id)
+    except (TypeError, ValueError):
+        return jsonify({"error": "sender_id must be an integer"}), 400
+
+    thread = SupportThread.query.get(thread_id)
+    if not thread:
+        return jsonify({"error": "Thread not found"}), 404
+    sender = User.query.get(sender_id)
+    if not sender:
+        return jsonify({"error": "Sender not found"}), 404
+    if sender.role not in ("STUDENT", "COUNSELLOR"):
+        return jsonify({"error": "Sender must be a STUDENT or COUNSELLOR"}), 400
+    if sender.role == "STUDENT" and thread.student_id != sender_id:
+        return jsonify({"error": "Students can only send messages to their own threads"}), 403
+
+    message = Message(thread_id=thread_id, sender_id=sender_id, content=str(content).strip())
+    db.session.add(message)
+    thread.status = "WAITING" if sender.role == "STUDENT" else "REPLIED"
+    db.session.commit()
+
+    return jsonify(_message_to_dict(message)), 201
