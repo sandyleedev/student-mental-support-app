@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ChatInterface } from "./ChatInterface";
+import { CounselorDashboard } from "./CounselorDashboard.tsx";
 import { MyConversations } from "./MyConversations.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
 
@@ -62,7 +63,10 @@ export function MainDashboard() {
     }
 
     if (userRole === "counselor") {
-      return <ChatInterface />;
+      if (counselorView === "chats") {
+        return <ChatInterface />;
+      }
+      return <CounselorDashboard />;
     }
   };
 
@@ -189,6 +193,16 @@ export function MainDashboard() {
             ) : (
               <>
                 <button
+                  onClick={() => setCounselorView("queue")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    counselorView === "queue"
+                      ? "bg-green-50 text-green-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <ClipboardList className="w-5 h-5" /> Request Queue
+                </button>
+                <button
                   onClick={() => setCounselorView("chats")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     counselorView === "chats"
@@ -198,16 +212,6 @@ export function MainDashboard() {
                 >
                   <MessageCircle className="w-5 h-5" /> My Chats
                 </button>
-                {/* <button
-                  onClick={() => setCounselorView("queue")}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    counselorView === "queue"
-                      ? "bg-green-50 text-green-700 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <ClipboardList className="w-5 h-5" /> Request Queue
-                </button> */}
               </>
             )}
           </nav>
