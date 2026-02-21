@@ -9,9 +9,9 @@ import {
   User,
 } from "lucide-react";
 import { useState } from "react";
-import { ChatInterface } from "./ChatInterface";
+import { CounselorChat } from "./CounselorChat.tsx";
 import { CounselorDashboard } from "./CounselorDashboard.tsx";
-import { MyConversations } from "./MyConversations.tsx";
+import { StudentChat } from "./StudentChat.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
 
 type UserRole = "student" | "counselor";
@@ -59,7 +59,7 @@ export function MainDashboard() {
   const renderMainContent = () => {
     if (userRole === "student") {
       return studentView === "conversations" ? (
-        <MyConversations />
+        <StudentChat />
       ) : (
         <SupportRequestForm />
       );
@@ -68,7 +68,7 @@ export function MainDashboard() {
     if (userRole === "counselor") {
       if (counselorView === "chats") {
         return (
-          <ChatInterface
+          <CounselorChat
             selectedThreadId={selectedThreadId}
             onBack={() => {
               setCounselorView("queue");
@@ -91,7 +91,7 @@ export function MainDashboard() {
 
   if (!isLoggedIn) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 font-sans">
+      <div className="h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-green-50 font-sans">
         <div className="max-w-md w-full bg-white p-10 rounded-3xl shadow-2xl border border-white/20 text-center">
           <div className="w-20 h-20 bg-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-200">
             <Heart className="text-white w-12 h-12" />

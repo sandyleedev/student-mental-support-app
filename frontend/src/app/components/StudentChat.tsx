@@ -1,0 +1,209 @@
+import {
+  CheckCircle2,
+  Clock,
+  MessageCircle,
+  Paperclip,
+  Search,
+  Send,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+
+interface Message {
+  id: number;
+  content: string;
+  sender_id: number;
+  created_at: string;
+}
+
+interface Thread {
+  id: number;
+  student_id: number;
+  topic: string;
+  status: "WAITING" | "REPLIED";
+  updated_at: string;
+}
+
+export function StudentChat() {
+  const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [messageInput, setMessageInput] = useState("");
+
+  const currentUserId = parseInt(localStorage.getItem("user_id") || "1");
+
+  useEffect(() => {
+    const fetchMyThreads = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5001/api/threads?user_id=${currentUserId}`,
+        );
+        const data = await response.json();
+        setThreads(data.threads);
+        if (data.threads.length > 0 && !selectedThreadId) {
+          setSelectedThreadId(data.threads[0].id);
+        }
+      } catch (error) {
+        console.error("Failed to load threads:", error);
+      }
+    };
+    fetchMyThreads();
+  }, [currentUserId, selectedThreadId]);
+
+  useEffect(() => {
+    if (!selectedThreadId) return;
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5001/api/threads/${selectedThreadId}`,
+        );
+        const data = await response.json();
+        setMessages(data.messages);
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      }
+    };
+    fetchMessages();
+  }, [selectedThreadId]);
+
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !selectedThreadId) return;
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/threads/${selectedThreadId}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender_id: currentUserId,
+            content: messageInput,
+          }),
+        },
+      );
+      if (response.ok) {
+        const newMessage = await response.json();
+        setMessages([...messages, newMessage]);
+        setMessageInput("");
+      }
+    } catch (error) {
+      console.error("Send failed:", error);
+    }
+  };
+
+  const selectedThread = threads.find((t) => t.id === selectedThreadId);
+
+  return (
+    <div className="h-screen flex bg-gray-50 overflow-hidden">
+      <aside className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center gap-2 text-blue-600 mb-4">
+            <MessageCircle className="w-6 h-6" />
+            <h1 className="text-xl font-bold">My Support</h1>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search requests..."
+              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm outline-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {threads.map((thread) => (
+            <button
+              key={thread.id}
+              onClick={() => setSelectedThreadId(thread.id)}
+              className={`w-full p-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 ${selectedThreadId === thread.id ? "bg-blue-50 border-l-4 border-blue-500" : ""}`}
+            >
+              <div className="flex justify-between items-start mb-1">
+                <span className="text-sm font-semibold truncate pr-2">
+                  {thread.topic}
+                </span>
+                {thread.status === "REPLIED" ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Clock className="w-4 h-4 text-yellow-500" />
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                {new Date(thread.updated_at).toLocaleDateString()}
+              </p>
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <main className="flex-1 flex flex-col bg-white">
+        {selectedThread ? (
+          <>
+            <div className="px-6 py-4 border-b border-gray-200 bg-white shadow-sm">
+              <h2 className="font-bold text-gray-900">
+                {selectedThread.topic}
+              </h2>
+              <p
+                className={`text-xs ${selectedThread.status === "REPLIED" ? "text-green-600" : "text-yellow-600"}`}
+              >
+                Status: {selectedThread.status}
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              {messages.map((msg) => {
+                const isMe = msg.sender_id === currentUserId;
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                  >
+                    <div className="max-w-[70%]">
+                      <div
+                        className={`px-4 py-2 rounded-2xl ${isMe ? "bg-blue-500 text-white rounded-br-md" : "bg-gray-200 text-gray-900 rounded-bl-md"}`}
+                      >
+                        <p className="text-sm">{msg.content}</p>
+                      </div>
+                      <span
+                        className={`text-[10px] text-gray-400 mt-1 block ${isMe ? "text-right" : "text-left"}`}
+                      >
+                        {new Date(msg.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-end gap-2">
+                <button className="p-2.5 rounded-lg hover:bg-gray-200">
+                  <Paperclip className="w-5 h-5" />
+                </button>
+                <textarea
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder="Type your reply..."
+                  className="flex-1 bg-white border border-gray-300 rounded-xl px-4 py-2 text-sm outline-none resize-none"
+                  rows={1}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!messageInput.trim()}
+                  className="p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg disabled:bg-gray-300"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-400">
+            Select a conversation to start chatting
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
