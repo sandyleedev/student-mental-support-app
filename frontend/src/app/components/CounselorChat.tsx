@@ -28,7 +28,7 @@ interface Conversation {
   isOnline: boolean;
 }
 
-export function ChatInterface({
+export function CounselorChat({
   selectedThreadId,
   userRole = "counselor",
 }: {
@@ -177,7 +177,7 @@ export function ChatInterface({
                   onClick={() => setSelectedConversation(conversation.id)}
                   className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 ${selectedConversation === conversation.id ? "bg-blue-50 dark:bg-gray-700" : ""}`}
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
+                  <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
                     {conversation.studentAvatar}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
@@ -202,7 +202,7 @@ export function ChatInterface({
           <div className="flex-1 flex flex-col min-w-0">
             <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
+                <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
                   {currentConversation?.studentAvatar || "S"}
                 </div>
                 <div>
