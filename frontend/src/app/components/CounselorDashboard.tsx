@@ -16,7 +16,11 @@ interface Thread {
   updated_at: string;
 }
 
-export function CounselorDashboard() {
+export function CounselorDashboard({
+  onSelectThread,
+}: {
+  onSelectThread?: (threadId: number) => void;
+}) {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("WAITING");
 
@@ -159,9 +163,13 @@ export function CounselorDashboard() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() =>
-                          handleActionClick(thread.id, thread.status)
-                        }
+                        onClick={() => {
+                          if (thread.status === "WAITING") {
+                            onSelectThread?.(thread.id);
+                          } else {
+                            handleActionClick(thread.id, thread.status);
+                          }
+                        }}
                         className={`p-2 rounded-lg transition-colors ${
                           thread.status === "WAITING"
                             ? "text-blue-600 hover:bg-blue-50"
