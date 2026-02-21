@@ -21,9 +21,12 @@ type StudentView = "request" | "conversations";
 export function MainDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>("student");
-  const [counselorView, setCounselorView] = useState<CounselorView>("chats");
+  const [counselorView, setCounselorView] = useState<CounselorView>("queue");
   const [studentView, setStudentView] = useState<StudentView>("request");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [selectedThreadId, setSelectedThreadId] = useState<number | undefined>(
+    undefined,
+  );
 
   const userData = {
     student: {
@@ -64,9 +67,25 @@ export function MainDashboard() {
 
     if (userRole === "counselor") {
       if (counselorView === "chats") {
-        return <ChatInterface />;
+        return (
+          <ChatInterface
+            selectedThreadId={selectedThreadId}
+            onBack={() => {
+              setCounselorView("queue");
+              setSelectedThreadId(undefined);
+            }}
+            userRole="counselor"
+          />
+        );
       }
-      return <CounselorDashboard />;
+      return (
+        <CounselorDashboard
+          onSelectThread={(threadId) => {
+            setSelectedThreadId(threadId);
+            setCounselorView("chats");
+          }}
+        />
+      );
     }
   };
 
