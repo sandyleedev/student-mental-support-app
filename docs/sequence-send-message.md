@@ -19,7 +19,7 @@ sequenceDiagram
     else Valid inputs
         API->>+DB: getThread
         DB-->>API: thread
-        API->>+DB: getUser
+        API->>DB: getUser
         DB-->>API: sender
         alt Thread or sender not found
             API-->>Client: 404 error
@@ -29,10 +29,10 @@ sequenceDiagram
                 API-->>Client: 403 error
                 Client-->>User: showError
             else Allowed
-                API->>+DB: createMessage updateThreadStatus commit
-                DB-->>API: ok
-                API-->>Client: 201 message
-                Client-->>User: showMessageInChat
+                API->>DB: createMessage updateThreadStatus commit
+                DB-->>-API: ok
+                API-->>-Client: 201 message
+                Client-->>-User: showMessageInChat
             end
         end
     end

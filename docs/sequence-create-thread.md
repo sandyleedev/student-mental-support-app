@@ -20,9 +20,9 @@ sequenceDiagram
         Client-->>User: showError
     else OK
         API->>DB: createThread createFirstMessage commit
-        DB-->>API: ok
-        API-->>Client: 201 thread
-        Client-->>User: showThreadCreated
+        DB-->>-API: ok
+        API-->>-Client: 201 thread
+        Client-->>-User: showThreadCreated
     end
 ```
 

@@ -18,10 +18,10 @@ sequenceDiagram
         API-->>Client: 404 error
         Client-->>User: showError
     else OK
-        API->>+DB: getMessages
-        DB-->>API: messages
-        API-->>Client: 200 thread and messages
-        Client-->>User: showChat
+        API->>DB: getMessages
+        DB-->>-API: messages
+        API-->>-Client: 200 thread and messages
+        Client-->>-User: showChat
     end
 ```
 

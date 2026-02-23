@@ -20,13 +20,13 @@ sequenceDiagram
         Client-->>User: showError
     else OK
         alt Student
-            API->>+DB: findThreadsByStudent
+            API->>DB: findThreadsByStudent
         else Counsellor
-            API->>+DB: findThreads
+            API->>DB: findThreads
         end
-        DB-->>API: threads
-        API-->>Client: 200 threads
-        Client-->>User: showThreadList
+        DB-->>-API: threads
+        API-->>-Client: 200 threads
+        Client-->>-User: showThreadList
     end
 ```
 
