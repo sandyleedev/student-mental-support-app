@@ -9,7 +9,7 @@ sequenceDiagram
     participant API
     participant DB
 
-    User->>Client: submitSupportRequest
+    User(Student)->>Client: submitSupportRequest
     Client->>+API: POST /api/threads {student_id, topic, description}
 
     API->>API: validateInputs
@@ -22,7 +22,7 @@ sequenceDiagram
         API->>DB: createFirstMessage(thread_id, student_id, description)
         API->>DB: commit
         API-->>-Client: 201 thread
-        Client-->>User: showThreadCreated
+        Client-->>User(Student): showThreadCreated
     end
 ```
 
