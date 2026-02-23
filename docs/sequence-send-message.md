@@ -10,32 +10,36 @@ sequenceDiagram
     participant DB
 
     User->>Client: sendMessage
-    Client->>+API: addMessage( threadId, senderId, content )
-    API->>API: validate
-    API->>DB: getThread( threadId )
-    DB-->>API: thread
-    alt Thread not found
-        API-->>Client: error
+    Client->>+API: POST /api/threads/{thread_id}/messages {sender_id, content}
+
+    API->>API: validateInputs
+
+    alt Invalid sender_id/content
+        API-->>Client: 400 error
+    else Valid inputs
+        API->>DB: getThread(thread_id)
+        API->>DB: getUser(sender_id)
+
+        alt Thread not found or sender not found
+            API-->>Client: 404 error
+        else Found
+            alt Student sending in another student's thread
+                API-->>Client: 403 error
+            else Allowed
+                API->>DB: createMessage + updateThreadStatus + commit
+                API-->>-Client: 201 message
+                Client-->>User: showMessageInChat
+            end
+        end
     end
-    API->>DB: getSender( senderId )
-    DB-->>API: sender
-    alt Sender not found or not allowed
-        API-->>Client: error
-    end
-    alt Student sending in another thread
-        API-->>Client: forbidden
-    end
-    API->>DB: saveMessage, updateThreadStatus
-    DB-->>API: ok
-    API-->>-Client: message
-    Client-->>User: showMessageInChat
 ```
 
 ## Flow
 
 | Step | What happens |
 |------|----------------|
-| 1 | User types a message and sends. |
-| 2 | System checks the thread exists and the sender can post (students only in their own thread). |
-| 3 | The message is saved and the thread status is updated (e.g. waiting for counsellor reply). |
-| 4 | The new message appears in the chat. |
+| 1 | User submits a message in a thread. Client calls POST /api/threads/{thread_id}/messages with sender_id and content. |
+| 2 | API validates inputs (missing/invalid sender_id or empty content returns 400). |
+| 3 | API checks the thread and sender exist (missing thread or sender returns 404) and enforces permissions (student can only post in their own thread, otherwise 403). |
+| 4 | If allowed, the API saves the message, updates the thread status (WAITING if the sender is a student, otherwise REPLIED), commits, and returns 201 with the created message. |
+| 5 | Client renders the new message in the chat. |
