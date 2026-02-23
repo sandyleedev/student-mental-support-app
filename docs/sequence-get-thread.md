@@ -10,22 +10,25 @@ sequenceDiagram
     participant DB
 
     User->>Client: openThread
-    Client->>+API: getThread( threadId )
-    API->>DB: getThread( threadId )
-    DB-->>API: thread
+    Client->>+API: GET /api/threads/{thread_id}
+
+    API->>DB: getThread(thread_id)
+
     alt Thread not found
-        API-->>Client: error
+        API-->>Client: 404 error
+    else OK
+        API->>DB: getMessages(thread_id) (order by created_at asc)
+        DB-->>API: thread, messages
+        API-->>-Client: 200 thread, messages
+        Client-->>User: showChat
     end
-    API->>DB: getMessages( threadId )
-    DB-->>API: messages
-    API-->>-Client: thread, messages
-    Client-->>User: showChat
 ```
 
 ## Flow
 
 | Step | What happens |
 |------|----------------|
-| 1 | User taps a thread in the list. |
-| 2 | System loads the thread and its messages in order. |
-| 3 | User sees the full conversation and can send a new message. |
+| 1 | User selects a thread from the list. |
+| 2 | Client requests GET /api/threads/{thread_id}. If the thread does not exist, the API returns 404. |
+| 3 | If found, the API loads all messages for that thread in chronological order and returns 200 with { thread, messages }. |
+| 4 | Client renders the conversation view. |
