@@ -4,7 +4,7 @@ Student starts a new support request by entering a topic and the first message. 
 
 ```mermaid
 sequenceDiagram
-    participant User
+    participant User(Student)
     participant Client
     participant API
     participant DB
