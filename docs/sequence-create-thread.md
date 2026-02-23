@@ -4,25 +4,25 @@ Student starts a new support request by entering a topic and the first message. 
 
 ```mermaid
 sequenceDiagram
-    participant User(Student)
+    participant User
     participant Client
     participant API
     participant DB
 
-    User(Student)->>Client: submitSupportRequest
-    Client->>+API: POST /api/threads {student_id, topic, description}
-
+    User->>+Client: submitSupportRequest
+    Client->>+API: createThread
     API->>API: validateInputs
-    API->>DB: getUser(student_id)
+    API->>+DB: getUser
+    DB-->>API: student
 
     alt Validation error or user not found
-        API-->>Client: 400/404 error
+        API-->>Client: 400 or 404 error
+        Client-->>User: showError
     else OK
-        API->>DB: createThread(student_id, topic, status=WAITING)
-        API->>DB: createFirstMessage(thread_id, student_id, description)
-        API->>DB: commit
-        API-->>-Client: 201 thread
-        Client-->>User(Student): showThreadCreated
+        API->>DB: createThread createFirstMessage commit
+        DB-->>API: ok
+        API-->>Client: 201 thread
+        Client-->>User: showThreadCreated
     end
 ```
 
@@ -30,7 +30,7 @@ sequenceDiagram
 
 | Step | What happens |
 |------|----------------|
-| 1 | User(Student) submits topic and the first message. |
+| 1 | User submits topic and the first message. |
 | 2 | API validates inputs and confirms the user exists and is a student (otherwise returns 400/404). |
 | 3 | API creates the thread and saves the first message, then returns 201 with the created thread. |
 | 4 | Client shows the created thread screen. |

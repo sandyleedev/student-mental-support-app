@@ -9,25 +9,29 @@ sequenceDiagram
     participant API
     participant DB
 
-    User->>Client: sendMessage
-    Client->>+API: POST /api/threads/{thread_id}/messages {sender_id, content}
-
+    User->>+Client: sendMessage
+    Client->>+API: addMessage
     API->>API: validateInputs
 
-    alt Invalid sender_id/content
+    alt Invalid sender_id or content
         API-->>Client: 400 error
+        Client-->>User: showError
     else Valid inputs
-        API->>DB: getThread(thread_id)
-        API->>DB: getUser(sender_id)
-
-        alt Thread not found or sender not found
+        API->>+DB: getThread
+        DB-->>API: thread
+        API->>+DB: getUser
+        DB-->>API: sender
+        alt Thread or sender not found
             API-->>Client: 404 error
+            Client-->>User: showError
         else Found
-            alt Student sending in another student's thread
+            alt Student sending in another thread
                 API-->>Client: 403 error
+                Client-->>User: showError
             else Allowed
-                API->>DB: createMessage + updateThreadStatus + commit
-                API-->>-Client: 201 message
+                API->>+DB: createMessage updateThreadStatus commit
+                DB-->>API: ok
+                API-->>Client: 201 message
                 Client-->>User: showMessageInChat
             end
         end

@@ -9,22 +9,23 @@ sequenceDiagram
     participant API
     participant DB
 
-    User->>Client: openConversations
-    Client->>+API: GET /api/threads?user_id=...&status=...
-
+    User->>+Client: openConversations
+    Client->>+API: listThreads
     API->>API: validateInputs
-    API->>DB: getUser(user_id)
+    API->>+DB: getUser
+    DB-->>API: user
 
     alt Validation error or user not found
-        API-->>Client: 400/404 error
+        API-->>Client: 400 or 404 error
+        Client-->>User: showError
     else OK
         alt Student
-            API->>DB: findThreadsByStudent(user_id)
+            API->>+DB: findThreadsByStudent
         else Counsellor
-            API->>DB: findThreads(status?)
+            API->>+DB: findThreads
         end
-        DB-->>API: threads (newest first)
-        API-->>-Client: 200 threads
+        DB-->>API: threads
+        API-->>Client: 200 threads
         Client-->>User: showThreadList
     end
 ```
