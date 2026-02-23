@@ -10,25 +10,27 @@ sequenceDiagram
     participant DB
 
     User->>Client: submitSupportRequest
-    Client->>+API: createThread( studentId, topic, description )
-    API->>API: validate
-    API->>DB: getUser( studentId )
-    DB-->>API: student
-    alt Validation fail
-        API-->>Client: error
+    Client->>+API: POST /api/threads {student_id, topic, description}
+
+    API->>API: validateInputs
+    API->>DB: getUser(student_id)
+
+    alt Validation error or user not found
+        API-->>Client: 400/404 error
+    else OK
+        API->>DB: createThread(student_id, topic, status=WAITING)
+        API->>DB: createFirstMessage(thread_id, student_id, description)
+        API->>DB: commit
+        API-->>-Client: 201 thread
+        Client-->>User: showThreadCreated
     end
-    API->>DB: saveThread
-    API->>DB: saveFirstMessage( threadId, content )
-    DB-->>API: ok
-    API-->>-Client: thread
-    Client-->>User: showThreadCreated
 ```
 
 ## Flow
 
 | Step | What happens |
 |------|----------------|
-| 1 | User fills in topic and first message, then submits. |
-| 2 | System checks the user is a student and the inputs are valid. |
-| 3 | A new thread is created and the first message is saved. |
-| 4 | User sees the new thread and can open it to continue the conversation. |
+| 1 | User(Student) submits topic and the first message. |
+| 2 | API validates inputs and confirms the user exists and is a student (otherwise returns 400/404). |
+| 3 | API creates the thread and saves the first message, then returns 201 with the created thread. |
+| 4 | Client shows the created thread screen. |
