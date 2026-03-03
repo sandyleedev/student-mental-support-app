@@ -3,10 +3,11 @@ import {
   ChevronDown,
   ClipboardList,
   Heart,
+  Lock,
   LogOut,
+  Mail,
   MessageCircle,
   Settings,
-  User,
 } from "lucide-react";
 import { useState } from "react";
 import { CounselorChat } from "./CounselorChat.tsx";
@@ -18,7 +19,35 @@ type UserRole = "student" | "counselor";
 type CounselorView = "chats" | "queue";
 type StudentView = "request" | "conversations";
 
+const MOCK_USERS = [
+  {
+    id: 1,
+    role: "student",
+    name: "Rory Gilmore",
+    email: "rory@test.com",
+    password: "123456",
+  },
+  {
+    id: 2,
+    role: "student",
+    name: "Lane Kim",
+    email: "lane@test.com",
+    password: "123456",
+  },
+  {
+    id: 3,
+    role: "counselor",
+    name: "Emily Gilmore",
+    email: "emily@test.com",
+    password: "123456",
+  },
+];
+
 export function MainDashboard() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>("student");
   const [counselorView, setCounselorView] = useState<CounselorView>("queue");
@@ -41,16 +70,50 @@ export function MainDashboard() {
     },
   };
 
-  const handleLogin = (role: UserRole) => {
-    setUserRole(role);
-    setIsLoggedIn(true);
-    localStorage.setItem("user_id", role === "student" ? "1" : "3");
+  const handleAuthLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setIsLoading(true);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const matchedUser = MOCK_USERS.find(
+        (user) => user.email === email && user.password === password,
+      );
+
+      if (matchedUser) {
+        localStorage.setItem("user_id", matchedUser.id.toString());
+        localStorage.setItem("role", matchedUser.role);
+        localStorage.setItem("user_name", matchedUser.name);
+
+        setUserRole(matchedUser.role as UserRole);
+        setIsLoggedIn(true);
+
+        if (matchedUser.role === "student") {
+          setStudentView("request");
+        } else {
+          setCounselorView("queue");
+        }
+      } else {
+        setLoginError("Invalid email or password. Please try again.");
+      }
+    } catch (error) {
+      console.error("Login process failed:", error);
+      setLoginError("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignOut = () => {
     setIsLoggedIn(false);
     setShowProfileMenu(false);
     localStorage.removeItem("user_id");
+    localStorage.removeItem("role");
+    localStorage.removeItem("token");
+    setEmail("");
+    setPassword("");
   };
 
   const currentUser =
@@ -91,39 +154,73 @@ export function MainDashboard() {
 
   if (!isLoggedIn) {
     return (
-      <div className="h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-green-50 font-sans">
-        <div className="max-w-md w-full bg-white p-10 rounded-3xl shadow-2xl border border-white/20 text-center">
-          <div className="w-20 h-20 bg-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl shadow-blue-200">
-            <Heart className="text-white w-12 h-12" />
+      <div className="h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-green-50 font-sans px-4">
+        <div className="max-w-md w-full bg-white p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/20">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-200">
+              <Heart className="text-white w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Welcome to CampusCompass
+            </h2>
+            <p className="text-gray-500 text-sm">
+              Please sign in to your account
+            </p>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            CampusCompass
-          </h2>
-          <p className="text-gray-500 mb-10">
-            Please select your role to enter the system
-          </p>
 
-          <div className="space-y-4">
-            <button
-              onClick={() => handleLogin("student")}
-              className="w-full flex items-center justify-center gap-4 p-5 border-2 border-blue-100 bg-blue-50/30 text-blue-700 rounded-2xl hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group"
-            >
-              <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                <User className="w-6 h-6" />
+          <form onSubmit={handleAuthLogin} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors"
+                  placeholder="name@test.com"
+                />
               </div>
-              <span className="text-lg font-semibold">I am a Student</span>
-            </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            {loginError && (
+              <div className="text-red-500 text-sm text-center bg-red-50 py-2 rounded-lg">
+                {loginError}
+              </div>
+            )}
 
             <button
-              onClick={() => handleLogin("counselor")}
-              className="w-full flex items-center justify-center gap-4 p-5 border-2 border-green-100 bg-green-50/30 text-green-700 rounded-2xl hover:border-green-500 hover:bg-green-50 transition-all duration-300 group"
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors mt-2"
             >
-              <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-500 group-hover:text-white transition-colors">
-                <Heart className="w-6 h-6" />
-              </div>
-              <span className="text-lg font-semibold">I am a Counselor</span>
+              {isLoading ? "Signing in..." : "Sign in"}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     );
