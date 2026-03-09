@@ -33,3 +33,36 @@ CREATE TABLE IF NOT EXISTS messages (
 
 CREATE INDEX IF NOT EXISTS idx_messages_thread_created
   ON messages (thread_id, created_at);
+
+-- Activities (counselling sessions and workshops)
+CREATE TABLE IF NOT EXISTS activities (
+  id           BIGSERIAL    PRIMARY KEY,
+  title        VARCHAR(255) NOT NULL,
+  type         VARCHAR(30)  NOT NULL CHECK (type IN ('SESSION', 'WORKSHOP')),
+  category     VARCHAR(100),
+  start_time   TIMESTAMPTZ  NOT NULL,
+  end_time     TIMESTAMPTZ  NOT NULL,
+  capacity     INT,
+  facilitator  VARCHAR(255),
+  status       VARCHAR(20)  NOT NULL CHECK (status IN ('UPCOMING', 'ONGOING', 'COMPLETED')),
+  created_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activities_start_time ON activities (start_time);
+CREATE INDEX IF NOT EXISTS idx_activities_type ON activities (type);
+CREATE INDEX IF NOT EXISTS idx_activities_status ON activities (status);
+
+-- Bookings (student bookings for activities)
+CREATE TABLE IF NOT EXISTS bookings (
+  id          BIGSERIAL    PRIMARY KEY,
+  student_id  BIGINT       NOT NULL REFERENCES users(id),
+  activity_id BIGINT       NOT NULL REFERENCES activities(id),
+  status      VARCHAR(20)  NOT NULL CHECK (status IN ('CONFIRMED', 'CANCELLED')),
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bookings_student ON bookings (student_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_activity ON bookings (activity_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings (status);

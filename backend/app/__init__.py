@@ -36,7 +36,7 @@ Swagger(
         "swagger": "2.0",
         "info": {
             "title": "Student Mental Support API",
-            "description": "API for support request threads and health checks.",
+            "description": "API for support request threads, bookings, and health checks.",
             "version": "0.1.0",
         },
     },
