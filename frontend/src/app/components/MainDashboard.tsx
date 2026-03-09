@@ -1,5 +1,6 @@
 import {
   Bell,
+  Calendar,
   ChevronDown,
   ClipboardList,
   Heart,
@@ -14,10 +15,11 @@ import { CounselorChat } from "./CounselorChat.tsx";
 import { CounselorDashboard } from "./CounselorDashboard.tsx";
 import { StudentChat } from "./StudentChat.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
+import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
 
 type UserRole = "student" | "counselor";
-type CounselorView = "chats" | "queue";
 type StudentView = "request" | "conversations";
+type TeamView = "queue" | "chats" | "activities";
 
 const MOCK_USERS = [
   {
@@ -44,31 +46,26 @@ const MOCK_USERS = [
 ];
 
 export function MainDashboard() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("emily@test.com");
+  const [password, setPassword] = useState("123456");
   const [loginError, setLoginError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>("student");
-  const [counselorView, setCounselorView] = useState<CounselorView>("queue");
   const [studentView, setStudentView] = useState<StudentView>("request");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [selectedThreadId, setSelectedThreadId] = useState<number | undefined>(
     undefined,
   );
+  const [teamView, setTeamView] = useState<TeamView>("queue");
 
-  const userData = {
-    student: {
-      name: "Rory Gilmore",
-      id: "STU-2024-001",
-      avatar: "RG",
-    },
-    counselor: {
-      name: "Dr. Sarah Mitchell",
-      role: "Senior Counselor",
-      avatar: "SM",
-    },
-  };
+  const userName = localStorage.getItem("user_name") || "User";
+  const userAvatar = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
 
   const handleAuthLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +90,7 @@ export function MainDashboard() {
         if (matchedUser.role === "student") {
           setStudentView("request");
         } else {
-          setCounselorView("queue");
+          setTeamView("queue");
         }
       } else {
         setLoginError("Invalid email or password. Please try again.");
@@ -116,9 +113,6 @@ export function MainDashboard() {
     setPassword("");
   };
 
-  const currentUser =
-    userRole === "student" ? userData.student : userData.counselor;
-
   const renderMainContent = () => {
     if (userRole === "student") {
       return studentView === "conversations" ? (
@@ -129,12 +123,15 @@ export function MainDashboard() {
     }
 
     if (userRole === "counselor") {
-      if (counselorView === "chats") {
+      if (teamView === "activities") {
+        return <WellbeingDashboard />;
+      }
+      if (teamView === "chats") {
         return (
           <CounselorChat
             selectedThreadId={selectedThreadId}
             onBack={() => {
-              setCounselorView("queue");
+              setTeamView("queue");
               setSelectedThreadId(undefined);
             }}
             userRole="counselor"
@@ -145,7 +142,7 @@ export function MainDashboard() {
         <CounselorDashboard
           onSelectThread={(threadId) => {
             setSelectedThreadId(threadId);
-            setCounselorView("chats");
+            setTeamView("chats");
           }}
         />
       );
@@ -202,7 +199,7 @@ export function MainDashboard() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors"
-                  placeholder="••••••••"
+                  placeholder="••••••"
                 />
               </div>
             </div>
@@ -257,7 +254,7 @@ export function MainDashboard() {
                   className="flex items-center gap-2 pl-2 py-1 hover:bg-gray-100 rounded-lg"
                 >
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
-                    {currentUser.avatar}
+                    {userAvatar}
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                 </button>
@@ -309,9 +306,9 @@ export function MainDashboard() {
             ) : (
               <>
                 <button
-                  onClick={() => setCounselorView("queue")}
+                  onClick={() => setTeamView("queue")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    counselorView === "queue"
+                    teamView === "queue"
                       ? "bg-green-50 text-green-700 font-medium"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
@@ -319,20 +316,35 @@ export function MainDashboard() {
                   <ClipboardList className="w-5 h-5" /> Request Queue
                 </button>
                 <button
-                  onClick={() => setCounselorView("chats")}
+                  onClick={() => setTeamView("chats")}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                    counselorView === "chats"
+                    teamView === "chats"
                       ? "bg-green-50 text-green-700 font-medium"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <MessageCircle className="w-5 h-5" /> My Chats
                 </button>
+
+                <div className="pt-4 mt-4 border-t border-gray-100">
+                  <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Management
+                  </p>
+                  <button
+                    onClick={() => setTeamView("activities")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                      teamView === "activities"
+                        ? "bg-green-50 text-green-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Calendar className="w-5 h-5" /> Activities
+                  </button>
+                </div>
               </>
             )}
           </nav>
         </aside>
-
         <main className="flex-1 overflow-auto p-6">{renderMainContent()}</main>
       </div>
     </div>
