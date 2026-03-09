@@ -13,12 +13,13 @@ import {
 import { useState } from "react";
 import { CounselorChat } from "./CounselorChat.tsx";
 import { CounselorDashboard } from "./CounselorDashboard.tsx";
+import { StudentBooking } from "./StudentBooking.tsx";
 import { StudentChat } from "./StudentChat.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
 import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
 
 type UserRole = "student" | "counselor";
-type StudentView = "request" | "conversations";
+type StudentView = "request" | "conversations" | "booking";
 type TeamView = "queue" | "chats" | "activities";
 
 const MOCK_USERS = [
@@ -115,11 +116,13 @@ export function MainDashboard() {
 
   const renderMainContent = () => {
     if (userRole === "student") {
-      return studentView === "conversations" ? (
-        <StudentChat />
-      ) : (
-        <SupportRequestForm />
-      );
+      if (studentView === "booking") {
+        return <StudentBooking />;
+      }
+      if (studentView === "conversations") {
+        return <StudentChat />;
+      }
+      return <SupportRequestForm />;
     }
 
     if (userRole === "counselor") {
@@ -301,6 +304,16 @@ export function MainDashboard() {
                   }`}
                 >
                   <MessageCircle className="w-5 h-5" /> My Conversations
+                </button>
+                <button
+                  onClick={() => setStudentView("booking")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    studentView === "booking"
+                      ? "bg-blue-50 text-blue-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Calendar className="w-5 h-5" /> Book Appointment
                 </button>
               </>
             ) : (
