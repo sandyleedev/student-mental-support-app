@@ -13,13 +13,14 @@ import {
 import { useState } from "react";
 import { CounselorChat } from "./CounselorChat.tsx";
 import { CounselorDashboard } from "./CounselorDashboard.tsx";
+import { MyBookings } from "./MyBookings.tsx";
 import { StudentBooking } from "./StudentBooking.tsx";
 import { StudentChat } from "./StudentChat.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
 import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
 
 type UserRole = "student" | "counselor";
-type StudentView = "request" | "conversations" | "booking";
+type StudentView = "request" | "conversations" | "booking" | "my-bookings";
 type TeamView = "queue" | "chats" | "activities";
 
 const MOCK_USERS = [
@@ -119,6 +120,8 @@ export function MainDashboard() {
       if (studentView === "booking") {
         return <StudentBooking />;
       }
+      if (studentView === "my-bookings")
+        return <MyBookings onBookNew={() => setStudentView("booking")} />;
       if (studentView === "conversations") {
         return <StudentChat />;
       }
@@ -314,6 +317,16 @@ export function MainDashboard() {
                   }`}
                 >
                   <Calendar className="w-5 h-5" /> Book Appointment
+                </button>
+                <button
+                  onClick={() => setStudentView("my-bookings")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    studentView === "my-bookings"
+                      ? "bg-blue-50 text-blue-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <ClipboardList className="w-5 h-5" /> My Bookings
                 </button>
               </>
             ) : (
