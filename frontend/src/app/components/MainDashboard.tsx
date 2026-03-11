@@ -21,7 +21,7 @@ import { TeamRota } from "./TeamRota.tsx";
 import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
 
 type UserRole = "student" | "counselor";
-type StudentView = "request" | "conversations";
+type StudentView = "request" | "conversations" | "booking";
 type TeamView = "queue" | "chats" | "activities" | "rota";
 
 const MOCK_USERS = [
