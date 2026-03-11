@@ -3,6 +3,7 @@ import {
   Calendar,
   ChevronDown,
   ClipboardList,
+  Clock,
   Heart,
   Lock,
   LogOut,
@@ -17,6 +18,7 @@ import { MyBookings } from "./MyBookings.tsx";
 import { StudentBooking } from "./StudentBooking.tsx";
 import { StudentChat } from "./StudentChat.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
+import { TeamRota } from "./TeamRota.tsx";
 import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
 
 type UserRole = "student" | "counselor";
@@ -131,6 +133,9 @@ export function MainDashboard() {
     if (userRole === "counselor") {
       if (teamView === "activities") {
         return <WellbeingDashboard />;
+      }
+      if (teamView === "rota") {
+        return <TeamRota />;
       }
       if (teamView === "chats") {
         return (
@@ -247,7 +252,7 @@ export function MainDashboard() {
               <span
                 className={`w-2 h-2 rounded-full ${userRole === "student" ? "bg-blue-500" : "bg-green-500"}`}
               />
-              {userRole === "student" ? "Student Portal" : "Counselor Portal"}
+              {userRole === "student" ? "Student Portal" : "Staff Portal"}
             </div>
 
             <div className="flex items-center gap-3">
@@ -365,6 +370,12 @@ export function MainDashboard() {
                     }`}
                   >
                     <Calendar className="w-5 h-5" /> Activities
+                  </button>
+                  <button
+                    onClick={() => setTeamView("rota")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${teamView === "rota" ? "bg-green-50 text-green-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
+                  >
+                    <Clock className="w-5 h-5" /> My Rota
                   </button>
                 </div>
               </>
