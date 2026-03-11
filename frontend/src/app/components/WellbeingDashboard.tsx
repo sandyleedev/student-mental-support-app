@@ -3,7 +3,7 @@ import {
   Calendar,
   Clock,
   Edit2,
-  Eye,
+  MapPin,
   Plus,
   Search,
   Trash2,
@@ -12,12 +12,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export type ActivityType = "session" | "workshop";
-
 export type Activity = {
   id: string;
   title: string;
-  type: ActivityType;
+  type: "session" | "workshop";
   category: string;
   date: string;
   time: string;
@@ -26,28 +24,15 @@ export type Activity = {
   booked: number;
   status: "upcoming" | "ongoing" | "completed";
   facilitator: string;
+  location?: string;
 };
 
-type ModalMode = "create" | "edit" | "view" | null;
+type ModalMode = "create" | "edit" | null;
 
-// --- Mock Data ---
-const INITIAL_ACTIVITIES: Activity[] = [
+const MOCK_WORKSHOPS: Activity[] = [
   {
     id: "1",
-    title: "Academic Support Session",
-    type: "session",
-    category: "Academic Support",
-    date: "2026-03-10",
-    time: "14:00",
-    duration: "60 min",
-    capacity: 5,
-    booked: 3,
-    status: "upcoming",
-    facilitator: "Dr. Sarah Mitchell",
-  },
-  {
-    id: "2",
-    title: "Mindfulness & Meditation Workshop",
+    title: "Mindfulness & Meditation",
     type: "workshop",
     category: "Personal Wellbeing",
     date: "2026-03-12",
@@ -57,76 +42,83 @@ const INITIAL_ACTIVITIES: Activity[] = [
     booked: 18,
     status: "upcoming",
     facilitator: "Dr. James Chen",
+    location: "Wellness Center Hall",
+  },
+  {
+    id: "2",
+    title: "Exam Stress Relief",
+    type: "workshop",
+    category: "Academic Support",
+    date: "2026-03-15",
+    time: "15:30",
+    duration: "120 min",
+    capacity: 25,
+    booked: 25,
+    status: "upcoming",
+    facilitator: "Emily Gilmore",
+    location: "Library Room A",
   },
   {
     id: "3",
-    title: "Career Planning Session",
-    type: "session",
+    title: "Career Prep Group",
+    type: "workshop",
     category: "Career Guidance",
-    date: "2026-03-08",
-    time: "09:00",
-    duration: "45 min",
-    capacity: 3,
-    booked: 3,
-    status: "completed",
-    facilitator: "Ms. Emily Rodriguez",
+    date: "2026-03-18",
+    time: "13:00",
+    duration: "90 min",
+    capacity: 15,
+    booked: 8,
+    status: "upcoming",
+    facilitator: "Dr. Sarah Mitchell",
+    location: "Career Center",
   },
 ];
 
 export function WellbeingDashboard() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [workshops, setWorkshops] = useState<Activity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"all" | ActivityType>("all");
+  const [filterType, setFilterType] = useState<"all" | "mine">("all");
 
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+  const [selectedWorkshop, setSelectedWorkshop] = useState<Activity | null>(
     null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentUserName, setCurrentUserName] = useState<string>("");
-  const [facilitatorValue, setFacilitatorValue] = useState<string>("");
 
-  // 1. [API] GET /api/activities
+  const currentUser = localStorage.getItem("user_name") || "Emily Gilmore";
+
   useEffect(() => {
-    const name = localStorage.getItem("user_name") || "";
-    setCurrentUserName(name);
     const fetchActivities = async () => {
+      setIsLoading(true);
       try {
-        setIsLoadingData(true);
         await new Promise((resolve) => setTimeout(resolve, 600));
-
-        // After API is ready, replace the below line with actual fetch:
-        // const response = await fetch('http://localhost:5001/api/activities');
-        // const data = await response.json();
-        // setActivities(data);
-
-        setActivities(INITIAL_ACTIVITIES);
+        // TODO: GET /api/activities?type=workshop
+        setWorkshops(MOCK_WORKSHOPS);
       } catch (error) {
-        console.error("Failed to fetch activities:", error);
+        console.error("Error fetching workshops:", error);
       } finally {
-        setIsLoadingData(false);
+        setIsLoading(false);
       }
     };
     fetchActivities();
   }, []);
 
-  const filteredActivities = activities.filter((activity) => {
+  const filteredWorkshops = workshops.filter((workshop) => {
     const matchesSearch =
-      activity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      activity.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      activity.facilitator.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterType === "all" || activity.type === filterType;
+      workshop.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      workshop.facilitator.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      filterType === "all" ||
+      (filterType === "mine" && workshop.facilitator === currentUser);
     return matchesSearch && matchesFilter;
   });
 
   const stats = {
-    totalActivities: activities.length,
-    upcomingActivities: activities.filter((a) => a.status === "upcoming")
-      .length,
-    totalBooked: activities.reduce((sum, a) => sum + a.booked, 0),
-    totalCapacity: activities.reduce((sum, a) => sum + a.capacity, 0),
+    totalWorkshops: workshops.length,
+    totalCapacity: workshops.reduce((sum, w) => sum + w.capacity, 0),
+    totalBooked: workshops.reduce((sum, w) => sum + w.booked, 0),
   };
 
   const utilizationRate =
@@ -136,110 +128,74 @@ export function WellbeingDashboard() {
 
   const handleOpenModal = (
     mode: ModalMode,
-    activity: Activity | null = null,
+    workshop: Activity | null = null,
   ) => {
-    setSelectedActivity(activity);
+    setSelectedWorkshop(workshop);
     setModalMode(mode);
-    if (mode === "create") {
-      setFacilitatorValue(localStorage.getItem("user_name") || "");
-    } else {
-      setFacilitatorValue(activity?.facilitator || "");
-    }
   };
 
   const handleCloseModal = () => {
     setModalMode(null);
-    setSelectedActivity(null);
-    setFacilitatorValue("");
+    setSelectedWorkshop(null);
   };
 
-  // 2. [API] POST /api/activities or PUT /api/activities/:id
   const handleSubmitForm = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
-    const newActivityData: Partial<Activity> = {
+    const newWorkshopData: Partial<Activity> = {
       title: formData.get("title") as string,
-      type: formData.get("type") as ActivityType,
+      type: "workshop",
       category: formData.get("category") as string,
       date: formData.get("date") as string,
       time: formData.get("time") as string,
       duration: formData.get("duration") as string,
       capacity: parseInt(formData.get("capacity") as string),
       facilitator: formData.get("facilitator") as string,
+      location: formData.get("location") as string,
     };
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 800));
-
       if (modalMode === "create") {
-        // Mock Create
         const newActivity: Activity = {
-          ...newActivityData,
+          ...newWorkshopData,
           id: Math.random().toString(36).substr(2, 9),
           booked: 0,
           status: "upcoming",
         } as Activity;
-        setActivities([newActivity, ...activities]);
-      } else if (modalMode === "edit" && selectedActivity) {
-        // Mock Update
-        setActivities(
-          activities.map((a) =>
-            a.id === selectedActivity.id ? { ...a, ...newActivityData } : a,
+        setWorkshops([newActivity, ...workshops]);
+      } else if (modalMode === "edit" && selectedWorkshop) {
+        setWorkshops(
+          workshops.map((w) =>
+            w.id === selectedWorkshop.id ? { ...w, ...newWorkshopData } : w,
           ),
         );
       }
       handleCloseModal();
     } catch (error) {
-      console.error("Failed to save activity:", error);
-      alert("Failed to save. Please try again.");
+      console.error("Failed to save workshop:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 3. [API] DELETE /api/activities/:id
-  const handleDeleteActivity = async (activityId: string) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this activity? This cannot be undone.",
-      )
-    ) {
+  const handleDeleteWorkshop = async (id: string) => {
+    if (confirm("Are you sure you want to delete this workshop?")) {
       try {
-        // API
-        // await fetch(`http://localhost:5001/api/activities/${activityId}`, { method: 'DELETE' });
-        setActivities(activities.filter((a) => a.id !== activityId));
+        setWorkshops(workshops.filter((w) => w.id !== id));
       } catch (error) {
-        console.error("Failed to delete activity:", error);
+        console.error("Failed to delete:", error);
       }
     }
   };
 
-  const getStatusColor = (status: Activity["status"]) => {
-    switch (status) {
-      case "upcoming":
-        return "bg-blue-100 text-blue-700 border border-blue-200";
-      case "ongoing":
-        return "bg-green-100 text-green-700 border border-green-200";
-      case "completed":
-        return "bg-gray-100 text-gray-700 border border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getTypeColor = (type: ActivityType) => {
-    return type === "session"
-      ? "bg-purple-100 text-purple-700"
-      : "bg-teal-100 text-teal-700";
-  };
-
-  if (isLoadingData) {
+  if (isLoading) {
     return (
       <div className="flex-1 h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50">
-        <Calendar className="w-12 h-12 mb-4 animate-pulse text-blue-300" />
-        <p>Loading team dashboard...</p>
+        <Calendar className="w-12 h-12 mb-4 animate-pulse text-teal-300" />
+        <p>Loading workshops...</p>
       </div>
     );
   }
@@ -247,74 +203,56 @@ export function WellbeingDashboard() {
   return (
     <div className="min-h-full bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                Well-being Team Dashboard
-              </h1>
-              <p className="text-sm text-gray-500">
-                {currentUserName ? `Welcome, ${currentUserName}. ` : ""}Manage
-                counseling sessions and wellness workshops
-              </p>
-            </div>
-            <button
-              onClick={() => handleOpenModal("create")}
-              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-colors shadow-sm font-medium"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Create Activity</span>
-            </button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              Team Workshops
+            </h1>
+            <p className="text-sm text-gray-500">
+              Create and manage well-being group events.
+            </p>
           </div>
+          <button
+            onClick={() => handleOpenModal("create")}
+            className="flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl transition-colors shadow-sm font-medium"
+          >
+            <Plus className="w-5 h-5" /> Create Workshop
+          </button>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-500">
-                  Total Activities
-                </span>
-                <Calendar className="w-5 h-5 text-blue-500" />
-              </div>
-              <p className="text-3xl font-bold text-gray-900">
-                {stats.totalActivities}
-              </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-500">
+                Active Workshops
+              </span>
+              <Calendar className="w-5 h-5 text-teal-500" />
             </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-500">
-                  Upcoming
-                </span>
-                <Clock className="w-5 h-5 text-green-500" />
-              </div>
-              <p className="text-3xl font-bold text-gray-900">
-                {stats.upcomingActivities}
-              </p>
+            <p className="text-3xl font-bold text-gray-900">
+              {stats.totalWorkshops}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-500">
+                Total Students Reached
+              </span>
+              <Users className="w-5 h-5 text-purple-500" />
             </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-500">
-                  Total Bookings
-                </span>
-                <Users className="w-5 h-5 text-purple-500" />
-              </div>
-              <p className="text-3xl font-bold text-gray-900">
-                {stats.totalBooked}
-              </p>
+            <p className="text-3xl font-bold text-gray-900">
+              {stats.totalBooked}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-500">
+                Overall Fill Rate
+              </span>
+              <BarChart3 className="w-5 h-5 text-orange-500" />
             </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-500">
-                  Utilization
-                </span>
-                <BarChart3 className="w-5 h-5 text-orange-500" />
-              </div>
-              <p className="text-3xl font-bold text-gray-900">
-                {utilizationRate}%
-              </p>
-            </div>
+            <p className="text-3xl font-bold text-gray-900">
+              {utilizationRate}%
+            </p>
           </div>
         </div>
 
@@ -324,164 +262,106 @@ export function WellbeingDashboard() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by title, category, or facilitator..."
+                placeholder="Search workshops by title or facilitator..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-sm"
               />
             </div>
-
             <div className="flex gap-2">
               <button
                 onClick={() => setFilterType("all")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filterType === "all"
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${filterType === "all" ? "bg-teal-50 text-teal-700" : "text-gray-600 hover:bg-gray-100"}`}
               >
-                All
+                All Workshops
               </button>
               <button
-                onClick={() => setFilterType("session")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filterType === "session"
-                    ? "bg-purple-50 text-purple-700"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                onClick={() => setFilterType("mine")}
+                className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${filterType === "mine" ? "bg-teal-50 text-teal-700" : "text-gray-600 hover:bg-gray-100"}`}
               >
-                1-on-1 Sessions
-              </button>
-              <button
-                onClick={() => setFilterType("workshop")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filterType === "workshop"
-                    ? "bg-teal-50 text-teal-700"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                Workshops
+                My Workshops
               </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Activity
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Date & Time
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Capacity
-                  </th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredActivities.map((activity) => (
-                  <tr
-                    key={activity.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900 mb-1">
-                        {activity.title}
-                      </div>
-                      <div className="text-xs text-gray-500 flex items-center gap-1">
-                        <Users className="w-3 h-3" /> {activity.facilitator}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(activity.type)}`}
-                      >
-                        {activity.type === "session" ? "Session" : "Workshop"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {new Date(activity.date).toLocaleDateString("en-GB")}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {activity.time} • {activity.duration}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-1.5 max-w-[60px]">
-                          <div
-                            className={`h-1.5 rounded-full ${activity.booked === activity.capacity ? "bg-red-500" : "bg-blue-500"}`}
-                            style={{
-                              width: `${(activity.booked / activity.capacity) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-600 font-medium">
-                          {activity.booked}/{activity.capacity}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}
-                      >
-                        {activity.status.charAt(0).toUpperCase() +
-                          activity.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => handleOpenModal("view", activity)}
-                          className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg transition-colors"
-                          title="View details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleOpenModal("edit", activity)}
-                          className="p-1.5 text-gray-400 hover:text-green-600 rounded-lg transition-colors"
-                          title="Edit activity"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteActivity(activity.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg transition-colors"
-                          title="Delete activity"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredActivities.length === 0 && (
-            <div className="text-center py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {filteredWorkshops.length === 0 ? (
+            <div className="col-span-full text-center py-16 bg-white rounded-xl border border-gray-200">
               <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">No activities found</p>
-              <p className="text-sm text-gray-400 mt-1">
-                Try adjusting your search or filters.
-              </p>
+              <p className="text-gray-500 font-medium">No workshops found</p>
             </div>
+          ) : (
+            filteredWorkshops.map((workshop) => (
+              <div
+                key={workshop.id}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:border-teal-300 transition-colors"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <span className="inline-block px-2.5 py-1 bg-teal-100 text-teal-800 text-xs font-bold rounded-md mb-2 uppercase tracking-wide">
+                      {workshop.category}
+                    </span>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {workshop.title}
+                    </h3>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleOpenModal("edit", workshop)}
+                      className="p-1.5 text-gray-400 hover:text-green-600 rounded-md bg-gray-50 hover:bg-green-50"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteWorkshop(workshop.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 rounded-md bg-gray-50 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" /> {workshop.date}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" /> {workshop.time} (
+                    {workshop.duration})
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-4 h-4" /> {workshop.facilitator}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4" /> {workshop.location}
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                  <div className="flex justify-between text-xs font-medium mb-1.5">
+                    <span className="text-gray-500">Registration</span>
+                    <span
+                      className={
+                        workshop.booked >= workshop.capacity
+                          ? "text-red-600"
+                          : "text-teal-600"
+                      }
+                    >
+                      {workshop.booked} / {workshop.capacity}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${workshop.booked >= workshop.capacity ? "bg-red-500" : "bg-teal-500"}`}
+                      style={{
+                        width: `${(workshop.booked / workshop.capacity) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))
           )}
         </div>
       </div>
@@ -492,8 +372,8 @@ export function WellbeingDashboard() {
             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
               <h3 className="text-lg font-bold text-gray-900">
                 {modalMode === "create"
-                  ? "Create New Activity"
-                  : "Edit Activity"}
+                  ? "Schedule New Workshop"
+                  : "Edit Workshop"}
               </h3>
               <button
                 onClick={handleCloseModal}
@@ -507,32 +387,17 @@ export function WellbeingDashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Activity Title *
+                    Workshop Title *
                   </label>
                   <input
                     required
                     name="title"
                     type="text"
-                    defaultValue={selectedActivity?.title || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                    placeholder="e.g., Exam Prep Workshop"
+                    defaultValue={selectedWorkshop?.title || ""}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
+                    placeholder="e.g., Anxiety Management Group"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Type *
-                  </label>
-                  <select
-                    name="type"
-                    defaultValue={selectedActivity?.type || "session"}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
-                  >
-                    <option value="session">1-on-1 Session</option>
-                    <option value="workshop">Well-being Workshop</option>
-                  </select>
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category *
@@ -540,9 +405,9 @@ export function WellbeingDashboard() {
                   <select
                     name="category"
                     defaultValue={
-                      selectedActivity?.category || "Academic Support"
+                      selectedWorkshop?.category || "Personal Wellbeing"
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 bg-white"
                   >
                     <option value="Academic Support">Academic Support</option>
                     <option value="Personal Wellbeing">
@@ -552,7 +417,19 @@ export function WellbeingDashboard() {
                     <option value="Social Connection">Social Connection</option>
                   </select>
                 </div>
-
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Max Capacity (Students) *
+                  </label>
+                  <input
+                    required
+                    name="capacity"
+                    type="number"
+                    min="2"
+                    defaultValue={selectedWorkshop?.capacity || 10}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Date *
@@ -561,11 +438,10 @@ export function WellbeingDashboard() {
                     required
                     name="date"
                     type="date"
-                    defaultValue={selectedActivity?.date || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    defaultValue={selectedWorkshop?.date || ""}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Time *
@@ -574,11 +450,10 @@ export function WellbeingDashboard() {
                     required
                     name="time"
                     type="time"
-                    defaultValue={selectedActivity?.time || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    defaultValue={selectedWorkshop?.time || ""}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Duration *
@@ -587,39 +462,33 @@ export function WellbeingDashboard() {
                     required
                     name="duration"
                     type="text"
-                    defaultValue={selectedActivity?.duration || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                    placeholder="e.g., 60 min"
+                    defaultValue={selectedWorkshop?.duration || "90 min"}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Capacity *
+                    Location / Room *
                   </label>
                   <input
                     required
-                    name="capacity"
-                    type="number"
-                    min="1"
-                    defaultValue={selectedActivity?.capacity || ""}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                    placeholder="e.g., 10"
+                    name="location"
+                    type="text"
+                    defaultValue={selectedWorkshop?.location || ""}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
+                    placeholder="e.g., Wellness Center, Room A"
                   />
                 </div>
-
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Facilitator *
+                    Lead Facilitator *
                   </label>
                   <input
                     required
                     name="facilitator"
                     type="text"
-                    value={facilitatorValue}
-                    onChange={(e) => setFacilitatorValue(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                    placeholder="e.g., Dr. Sarah Mitchell"
+                    defaultValue={selectedWorkshop?.facilitator || currentUser}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               </div>
@@ -628,105 +497,19 @@ export function WellbeingDashboard() {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                  className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg hover:bg-gray-50 font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors text-sm font-medium"
+                  className="flex-1 bg-teal-600 text-white py-2.5 rounded-lg hover:bg-teal-700 disabled:bg-teal-300 font-medium"
                 >
-                  {isSubmitting
-                    ? "Saving..."
-                    : modalMode === "create"
-                      ? "Create Activity"
-                      : "Save Changes"}
+                  {isSubmitting ? "Saving..." : "Save Workshop"}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {modalMode === "view" && selectedActivity && (
-        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900">
-                {selectedActivity.title}
-              </h3>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-y-4 gap-x-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">
-                    Category
-                  </div>
-                  <div className="text-sm text-gray-900">
-                    {selectedActivity.category}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">
-                    Facilitator
-                  </div>
-                  <div className="text-sm text-gray-900">
-                    {selectedActivity.facilitator}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">
-                    Date & Time
-                  </div>
-                  <div className="text-sm text-gray-900">
-                    {selectedActivity.date} at {selectedActivity.time}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">
-                    Duration
-                  </div>
-                  <div className="text-sm text-gray-900">
-                    {selectedActivity.duration}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-gray-900">
-                    Booking Progress
-                  </div>
-                  <div className="text-sm font-medium text-blue-600">
-                    {selectedActivity.booked} / {selectedActivity.capacity}{" "}
-                    Filled
-                  </div>
-                </div>
-                <div className="bg-gray-100 rounded-full h-2 overflow-hidden">
-                  <div
-                    className={`h-full transition-all ${selectedActivity.booked === selectedActivity.capacity ? "bg-red-500" : "bg-blue-500"}`}
-                    style={{
-                      width: `${(selectedActivity.booked / selectedActivity.capacity) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={handleCloseModal}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 py-2.5 rounded-lg transition-colors text-sm font-medium"
-              >
-                Close
-              </button>
-            </div>
           </div>
         </div>
       )}
