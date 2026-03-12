@@ -23,7 +23,7 @@ import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
 
 type UserRole = "student" | "counselor";
 type StudentView = "request" | "conversations" | "booking" | "my-bookings";
-type TeamView = "queue" | "chats" | "activities";
+type TeamView = "queue" | "chats" | "activities" | "rota";
 
 const MOCK_USERS = [
   {

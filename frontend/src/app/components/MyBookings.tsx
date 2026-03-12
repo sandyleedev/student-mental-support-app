@@ -12,7 +12,6 @@ export type Booking = {
   id: string;
   title: string;
   type: "session" | "workshop";
-  category: string;
   date: string;
   time: string;
   duration: string;
@@ -27,7 +26,6 @@ const MOCK_BOOKINGS: Booking[] = [
     id: "1",
     title: "Academic Support Session",
     type: "session",
-    category: "Academic Support",
     date: "2026-03-16",
     time: "14:00",
     duration: "60 min",
@@ -39,7 +37,6 @@ const MOCK_BOOKINGS: Booking[] = [
     id: "2",
     title: "Mindfulness & Meditation Workshop",
     type: "workshop",
-    category: "Personal Wellbeing",
     date: "2026-03-18",
     time: "10:00",
     duration: "90 min",
@@ -51,7 +48,6 @@ const MOCK_BOOKINGS: Booking[] = [
     id: "3",
     title: "Career Planning Session",
     type: "session",
-    category: "Career Guidance",
     date: "2026-03-01",
     time: "09:00",
     duration: "45 min",
@@ -251,9 +247,6 @@ export function MyBookings({ onBookNew }: MyBookingsProps) {
                       <h3 className="text-lg font-bold text-gray-900">
                         {booking.title}
                       </h3>
-                      <p className="text-sm text-gray-500">
-                        {booking.category}
-                      </p>
                     </div>
                     <button
                       onClick={() => setBookingToCancel(booking)}
@@ -331,9 +324,6 @@ export function MyBookings({ onBookNew }: MyBookingsProps) {
                         </span>
                         {getStatusBadge(booking.status)}
                       </div>
-                      <p className="text-xs text-gray-500">
-                        {booking.category}
-                      </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
                       <span className="flex items-center gap-1">
