@@ -1,5 +1,5 @@
 -- Table creation only. Run against an existing database (e.g. student_mental_support).
--- Order: users -> support_threads -> messages (FK dependencies).
+-- Order: users -> support_threads, counsellor_rotas, activities -> messages, bookings (FK dependencies).
 
 CREATE TABLE IF NOT EXISTS users (
   id         BIGSERIAL    PRIMARY KEY,
@@ -34,35 +34,59 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS idx_messages_thread_created
   ON messages (thread_id, created_at);
 
--- Activities (counselling sessions and workshops)
+-- CounsellorRota: counsellor availability by day and time
+CREATE TABLE IF NOT EXISTS counsellor_rotas (
+  id            BIGSERIAL    PRIMARY KEY,
+  counsellor_id BIGINT       NOT NULL REFERENCES users(id),
+  day_of_week   VARCHAR(20)  NOT NULL,
+  start_time    TIME         NOT NULL,
+  duration_min  INT          NOT NULL CHECK (duration_min > 0),
+  created_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_counsellor_rotas_counsellor
+  ON counsellor_rotas (counsellor_id);
+CREATE INDEX IF NOT EXISTS idx_counsellor_rotas_day
+  ON counsellor_rotas (day_of_week);
+
+-- Activity: sessions and workshops (ActivityType: SESSION, WORKSHOP)
+-- status (UPCOMING/ONGOING/COMPLETED) is derived at API time from start_time + duration_min
 CREATE TABLE IF NOT EXISTS activities (
-  id           BIGSERIAL    PRIMARY KEY,
-  title        VARCHAR(255) NOT NULL,
-  type         VARCHAR(30)  NOT NULL CHECK (type IN ('SESSION', 'WORKSHOP')),
-  category     VARCHAR(100),
-  start_time   TIMESTAMPTZ  NOT NULL,
-  end_time     TIMESTAMPTZ  NOT NULL,
-  capacity     INT,
-  facilitator  VARCHAR(255),
-  status       VARCHAR(20)  NOT NULL CHECK (status IN ('UPCOMING', 'ONGOING', 'COMPLETED')),
+  id             BIGSERIAL    PRIMARY KEY,
+  type           VARCHAR(20)  NOT NULL CHECK (type IN ('SESSION', 'WORKSHOP')),
+  title          VARCHAR(255) NOT NULL,
+  start_time     TIMESTAMPTZ  NOT NULL,
+  duration_min   INT          NOT NULL CHECK (duration_min > 0),
+  capacity       INT          NOT NULL CHECK (capacity > 0),
+  CONSTRAINT activities_session_capacity CHECK (type != 'SESSION' OR capacity = 1),
+  facilitator_id BIGINT       NOT NULL REFERENCES users(id),
+  location       VARCHAR(255),
   created_at     TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at     TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_activities_start_time ON activities (start_time);
-CREATE INDEX IF NOT EXISTS idx_activities_type ON activities (type);
-CREATE INDEX IF NOT EXISTS idx_activities_status ON activities (status);
+CREATE INDEX IF NOT EXISTS idx_activities_facilitator
+  ON activities (facilitator_id);
+CREATE INDEX IF NOT EXISTS idx_activities_start
+  ON activities (start_time);
+CREATE INDEX IF NOT EXISTS idx_activities_type
+  ON activities (type);
 
--- Bookings (student bookings for activities)
+-- Booking: student bookings for activities (BookingStatus: CONFIRMED, CANCELLED)
 CREATE TABLE IF NOT EXISTS bookings (
   id          BIGSERIAL    PRIMARY KEY,
+  activity_id BIGINT       NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
   student_id  BIGINT       NOT NULL REFERENCES users(id),
-  activity_id BIGINT       NOT NULL REFERENCES activities(id),
   status      VARCHAR(20)  NOT NULL CHECK (status IN ('CONFIRMED', 'CANCELLED')),
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
-  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+  cancelled_at TIMESTAMPTZ,
+  UNIQUE (activity_id, student_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_bookings_student ON bookings (student_id);
-CREATE INDEX IF NOT EXISTS idx_bookings_activity ON bookings (activity_id);
-CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings (status);
+CREATE INDEX IF NOT EXISTS idx_bookings_activity
+  ON bookings (activity_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_student
+  ON bookings (student_id);
+CREATE INDEX IF NOT EXISTS idx_bookings_status
+  ON bookings (status);
