@@ -23,8 +23,8 @@
    psql -d student_mental_support -f scripts/db/02_seed_data.sql
    ```
 
-- **01_create_tables.sql**: creates tables and indexes (safe to re-run).
-- **02_seed_data.sql**: inserts demo users, threads, messages, activities, and bookings; resets sequences (safe to re-run).
+- **01_create_tables.sql**: creates tables (users, support_threads, messages, counsellor_rotas, activities, bookings) and indexes (safe to re-run).
+- **02_seed_data.sql**: inserts demo users, threads, messages, counsellor rotas, activities, bookings; resets sequences (safe to re-run).
 
 ## Migrating from old schema (events / name column)
 
@@ -35,6 +35,7 @@ psql -d student_mental_support -c "
 DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS support_threads CASCADE;
+DROP TABLE IF EXISTS counsellor_rotas CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
 DROP TABLE IF EXISTS activities CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
