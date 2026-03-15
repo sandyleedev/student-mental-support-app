@@ -1,5 +1,40 @@
 from flask import jsonify, request
 from app import app
+from app.models import User
+
+
+@app.route("/api/users", methods=["GET"])
+def list_users():
+    """List users, optionally filtered by role. For WellbeingDashboard 'Add Student' list.
+    ---
+    tags:
+      - users
+    parameters:
+      - in: query
+        name: role
+        type: string
+        enum: [STUDENT, COUNSELLOR]
+        description: Filter by role
+    responses:
+      200:
+        description: List of users
+    """
+    role = request.args.get("role")
+    query = User.query
+    if role and role.upper() in ("STUDENT", "COUNSELLOR"):
+        query = query.filter_by(role=role.upper())
+    users = query.order_by(User.name.asc()).all()
+    return jsonify({
+        "users": [
+            {
+                "id": str(u.id),
+                "name": u.name,
+                "role": u.role,
+                "email": getattr(u, "email", "") or "",
+            }
+            for u in users
+        ]
+    }), 200
 
 
 @app.route("/")
