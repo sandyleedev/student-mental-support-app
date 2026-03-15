@@ -21,10 +21,14 @@ INSERT INTO users (id, role, name) VALUES
   (16, 'STUDENT',  'Brad Langford')
 ON CONFLICT (id) DO NOTHING;
 
--- Threads (2 threads: Rory, Lane)
-INSERT INTO support_threads (id, student_id, topic, status) VALUES
-  (1, 1, 'Feeling overwhelmed with deadlines', 'REPLIED'),
-  (2, 2, 'Struggling to focus on readings', 'WAITING')
+-- Threads (6 threads with mixed urgency levels)
+INSERT INTO support_threads (id, student_id, topic, urgency_level, status) VALUES
+  (1, 1, 'Feeling overwhelmed with deadlines', 'MEDIUM', 'REPLIED'),
+  (2, 2, 'Struggling to focus on readings', 'LOW', 'WAITING'),
+  (3, 7, 'Panic attacks before exams', 'URGENT', 'WAITING'),
+  (4, 8, 'I have not slept properly for days', 'URGENT', 'REPLIED'),
+  (5, 11, 'Falling behind on coursework', 'MEDIUM', 'WAITING'),
+  (6, 12, 'Feeling isolated in group projects', 'LOW', 'REPLIED')
 ON CONFLICT (id) DO NOTHING;
 
 -- Thread 1: 6 messages (Rory <-> Emily), last from counsellor -> REPLIED
@@ -44,6 +48,30 @@ INSERT INTO messages (id, thread_id, sender_id, content) VALUES
   (9, 2, 2, 'That made it a bit easier. But I still forget what I read after a few pages.'),
   (10, 2, 3, 'Summarising out loud or writing a few bullet points after each chapter can help. Give that a go and see how it feels.'),
   (11, 2, 2, 'I will. Can I come back if it still doesn''t stick?')
+ON CONFLICT (id) DO NOTHING;
+
+-- Thread 3: Jess, urgent, last from student -> WAITING
+INSERT INTO messages (id, thread_id, sender_id, content) VALUES
+  (12, 3, 7, 'I have been having panic attacks before exams and today it got bad enough that I had to leave the room.')
+ON CONFLICT (id) DO NOTHING;
+
+-- Thread 4: Paris, urgent, last from counsellor -> REPLIED
+INSERT INTO messages (id, thread_id, sender_id, content) VALUES
+  (13, 4, 8, 'I have barely slept this week and I feel exhausted and on edge all the time.'),
+  (14, 4, 3, 'Thank you for telling us. Please prioritise rest today and come to the wellbeing office if you feel unsafe or unable to cope alone.'),
+  (15, 4, 8, 'I can come in later today. I just do not think I can keep going like this.'),
+  (16, 4, 3, 'That sounds like the right next step. We can help you make a plan and decide what support you need today.')
+ON CONFLICT (id) DO NOTHING;
+
+-- Thread 5: Tristan, medium, last from student -> WAITING
+INSERT INTO messages (id, thread_id, sender_id, content) VALUES
+  (17, 5, 11, 'I am falling behind on coursework and starting to feel stuck, but it is not a crisis right now.')
+ON CONFLICT (id) DO NOTHING;
+
+-- Thread 6: Logan, low, last from counsellor -> REPLIED
+INSERT INTO messages (id, thread_id, sender_id, content) VALUES
+  (18, 6, 12, 'I feel isolated in group projects and it is making me less motivated to attend seminars.'),
+  (19, 6, 4, 'That sounds really difficult. We can talk through some small steps to reconnect with your group and reduce the stress around seminars.')
 ON CONFLICT (id) DO NOTHING;
 
 -- Counsellor rotas: Mon-Fri 9am-5pm only (8 slots per day: 9:00–16:00)
