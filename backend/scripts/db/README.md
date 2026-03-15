@@ -26,20 +26,24 @@
 - **01_create_tables.sql**: creates tables (users, support_threads, messages, counsellor_rotas, activities, bookings) and indexes (safe to re-run).
 - **02_seed_data.sql**: inserts demo users, threads, messages, counsellor rotas, activities, bookings; resets sequences (safe to re-run).
 
-## Migrating from old schema (events / name column)
+## Reset DB (delete all data and apply fresh seed)
 
-If you have an existing database with the old `events` table or `users.name` column, drop all tables and recreate:
+From the `backend/` directory:
 
 ```bash
+cd backend
 psql -d student_mental_support -c "
 DROP TABLE IF EXISTS bookings CASCADE;
 DROP TABLE IF EXISTS messages CASCADE;
 DROP TABLE IF EXISTS support_threads CASCADE;
 DROP TABLE IF EXISTS counsellor_rotas CASCADE;
-DROP TABLE IF EXISTS events CASCADE;
 DROP TABLE IF EXISTS activities CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 "
 psql -d student_mental_support -f scripts/db/01_create_tables.sql
 psql -d student_mental_support -f scripts/db/02_seed_data.sql
 ```
+
+## Migrating from old schema (events / name column)
+
+Same as reset above – drop all tables, then run 01 and 02.
