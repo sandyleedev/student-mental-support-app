@@ -3,6 +3,8 @@ from app import app, db
 from app.models import SupportThread, Message
 from app.models.user import User
 
+VALID_URGENCY_LEVELS = {"urgent", "medium", "low"}
+
 
 def _thread_to_dict(thread):
     """Serialize SupportThread to API response dict."""
@@ -10,6 +12,7 @@ def _thread_to_dict(thread):
         "id": thread.id,
         "student_id": thread.student_id,
         "topic": thread.topic,
+        "urgency_level": thread.urgency_level.lower() if thread.urgency_level else None,
         "status": thread.status,
         "created_at": thread.created_at.isoformat() if thread.created_at else None,
         "updated_at": thread.updated_at.isoformat() if thread.updated_at else None,
@@ -96,6 +99,7 @@ def create_thread():
             - student_id
             - topic
             - description
+            - urgency_level
           properties:
             student_id:
               type: integer
@@ -106,11 +110,15 @@ def create_thread():
             description:
               type: string
               description: First message content (saved as the thread's first message)
+            urgency_level:
+              type: string
+              enum: [urgent, medium, low]
+              description: Frontend-calculated urgency level
     responses:
       201:
         description: Thread created with first message
       400:
-        description: Validation error (missing or invalid student_id/topic/description)
+        description: Validation error (missing or invalid student_id/topic/description/urgency_level)
       404:
         description: Student not found
     """
@@ -118,6 +126,7 @@ def create_thread():
     student_id = data.get("student_id")
     topic = data.get("topic")
     description = data.get("description")
+    urgency_level = data.get("urgency_level")
 
     if student_id is None:
         return jsonify({"error": "student_id is required"}), 400
@@ -125,6 +134,8 @@ def create_thread():
         return jsonify({"error": "topic is required and must be non-empty"}), 400
     if description is None or not str(description).strip():
         return jsonify({"error": "description is required and must be non-empty"}), 400
+    if not urgency_level or not str(urgency_level).strip():
+        return jsonify({"error": "urgency_level is required and must be non-empty"}), 400
 
     try:
         student_id = int(student_id)
@@ -139,8 +150,16 @@ def create_thread():
 
     topic_str = str(topic).strip()
     description_str = str(description).strip()
+    urgency_level_str = str(urgency_level).strip().lower()
+    if urgency_level_str not in VALID_URGENCY_LEVELS:
+        return jsonify({"error": "urgency_level must be urgent, medium, or low"}), 400
 
-    thread = SupportThread(student_id=student_id, topic=topic_str, status="WAITING")
+    thread = SupportThread(
+        student_id=student_id,
+        topic=topic_str,
+        urgency_level=urgency_level_str.upper(),
+        status="WAITING",
+    )
     db.session.add(thread)
     db.session.flush()
 
