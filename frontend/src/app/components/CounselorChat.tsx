@@ -36,22 +36,12 @@ export function CounselorChat({
   onBack?: () => void;
   userRole?: "student" | "counselor";
 }) {
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string>(
     selectedThreadId?.toString() || "",
   );
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (isDarkMode) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, [isDarkMode]);
 
   useEffect(() => {
     if (userRole === "counselor") {
@@ -137,35 +127,29 @@ export function CounselorChat({
 
   return (
     <div>
-      <div className="h-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-        <div className="h-screen flex bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <div className="h-full bg-gray-50  transition-colors duration-200">
+        <div className="h-screen flex bg-gray-50  transition-colors duration-200">
           {/* Sidebar */}
           <div
             className={
-              "md:translate-x-0 fixed md:relative z-30 w-80 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-300"
+              "md:translate-x-0 fixed md:relative z-30 w-80 h-full bg-white  border-gray-200  flex flex-col transition-transform duration-300"
             }
           >
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-4 border-b border-gray-200 ">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-6 h-6 text-blue-500" />
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                  <h1 className="text-xl font-bold text-gray-900 ">
                     CampusCompass
                   </h1>
                 </div>
-                <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700"
-                >
-                  {isDarkMode ? "☀️" : "🌙"}
-                </button>
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search conversations..."
-                  className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-100"
                 />
               </div>
             </div>
@@ -175,21 +159,21 @@ export function CounselorChat({
                 <button
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 ${selectedConversation === conversation.id ? "bg-blue-50 dark:bg-gray-700" : ""}`}
+                  className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 ${selectedConversation === conversation.id ? "bg-blue-50" : ""}`}
                 >
                   <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
                     {conversation.studentAvatar}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex justify-between mb-1">
-                      <h3 className="text-sm font-medium dark:text-white truncate">
+                      <h3 className="text-sm font-medium ">
                         {conversation.studentName}
                       </h3>
                       <span className="text-xs text-gray-500">
                         {conversation.timestamp}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                    <p className="text-sm text-gray-600  truncate">
                       {conversation.lastMessage}
                     </p>
                   </div>
@@ -200,13 +184,13 @@ export function CounselorChat({
 
           {/* Main Chat Area */}
           <div className="flex-1 flex flex-col min-w-0">
-            <div className="px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div className="px-6 py-4 bg-white  border-b border-gray-200  flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white">
                   {currentConversation?.studentAvatar || "S"}
                 </div>
                 <div>
-                  <h2 className="font-bold text-gray-900 dark:text-white">
+                  <h2 className="font-bold text-gray-900 ">
                     {currentConversation?.studentName ||
                       "Select a conversation"}
                   </h2>
@@ -226,7 +210,7 @@ export function CounselorChat({
                   >
                     <div className="max-w-[70%]">
                       <div
-                        className={`px-4 py-2 rounded-2xl ${isCounselor ? "bg-blue-500 text-white rounded-br-md" : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md"}`}
+                        className={`px-4 py-2 rounded-2xl ${isCounselor ? "bg-blue-500 text-white rounded-br-md" : "bg-gray-200  text-gray-900  rounded-bl-md"}`}
                       >
                         <p className="text-sm">{message.content}</p>
                       </div>
@@ -247,12 +231,12 @@ export function CounselorChat({
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            <div className="p-4 bg-white  border-t border-gray-200 ">
               <div className="flex items-end gap-2">
-                <button className="p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <button className="p-2.5 rounded-lg hover:bg-gray-100 ">
                   <Paperclip className="w-5 h-5" />
                 </button>
-                <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-2xl px-4 py-2">
+                <div className="flex-1 bg-gray-100  rounded-2xl px-4 py-2">
                   <textarea
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
