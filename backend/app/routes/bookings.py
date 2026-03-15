@@ -50,6 +50,17 @@ def _booking_to_dict(booking):
     }
 
 
+def _booking_sort_key(booking):
+    """Sort upcoming first by soonest date, then history by most recent date."""
+    activity = booking.activity
+    start_time = activity.start_time if activity and activity.start_time else datetime.min.replace(tzinfo=timezone.utc)
+
+    if booking.status == "CANCELLED" or (activity and activity.status == "COMPLETED"):
+        return (1, -start_time.timestamp())
+
+    return (0, start_time.timestamp())
+
+
 @app.route("/api/bookings", methods=["GET"])
 def list_bookings():
     """Retrieve my bookings (student). Includes CONFIRMED and CANCELLED.
@@ -84,7 +95,8 @@ def list_bookings():
     if user.role != "STUDENT":
         return jsonify({"error": "Only students have bookings"}), 400
 
-    bookings = Booking.query.filter_by(student_id=userId).order_by(Booking.created_at.desc()).all()
+    bookings = Booking.query.filter_by(student_id=userId).all()
+    bookings.sort(key=_booking_sort_key)
     return jsonify({"bookings": [_booking_to_dict(b) for b in bookings]}), 200
 
 
