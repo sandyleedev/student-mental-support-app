@@ -2,23 +2,23 @@
 -- Uses explicit IDs so FKs are stable; resets sequences at the end.
 
 -- Users (12 students, 4 counsellors)
-INSERT INTO users (id, role, name) VALUES
-  (1, 'STUDENT',   'Rory Gilmore'),
-  (2, 'STUDENT',   'Lane Kim'),
-  (3, 'COUNSELLOR', 'Emily Gilmore'),
-  (4, 'COUNSELLOR', 'James Chen'),
-  (5, 'COUNSELLOR', 'Sarah Mitchell'),
-  (6, 'COUNSELLOR', 'David Park'),
-  (7, 'STUDENT',   'Jess Mariano'),
-  (8, 'STUDENT',   'Paris Geller'),
-  (9, 'STUDENT',   'Dean Forester'),
-  (10, 'STUDENT',  'Madeline Lynn'),
-  (11, 'STUDENT',  'Tristan Dugray'),
-  (12, 'STUDENT',  'Logan Huntzberger'),
-  (13, 'STUDENT',  'Colin McCrae'),
-  (14, 'STUDENT',  'Finn Cole'),
-  (15, 'STUDENT',  'Henry Cho'),
-  (16, 'STUDENT',  'Brad Langford')
+INSERT INTO users (id, role, name, email, password) VALUES
+  (1, 'STUDENT',   'Rory Gilmore',       'rory@test.com',       '123456'),
+  (2, 'STUDENT',   'Lane Kim',           'lane@test.com',       '123456'),
+  (3, 'COUNSELLOR', 'Emily Gilmore',     'emily@test.com',      '123456'),
+  (4, 'COUNSELLOR', 'James Chen',        'james@test.com',      '123456'),
+  (5, 'COUNSELLOR', 'Sarah Mitchell',    'sarah@test.com',      '123456'),
+  (6, 'COUNSELLOR', 'David Park',        'david@test.com',      '123456'),
+  (7, 'STUDENT',   'Jess Mariano',       'jess@test.com',       '123456'),
+  (8, 'STUDENT',   'Paris Geller',       'paris@test.com',      '123456'),
+  (9, 'STUDENT',   'Dean Forester',      'dean@test.com',       '123456'),
+  (10, 'STUDENT',  'Madeline Lynn',      'madeline@test.com',   '123456'),
+  (11, 'STUDENT',  'Tristan Dugray',     'tristan@test.com',    '123456'),
+  (12, 'STUDENT',  'Logan Huntzberger',  'logan@test.com',      '123456'),
+  (13, 'STUDENT',  'Colin McCrae',       'colin@test.com',      '123456'),
+  (14, 'STUDENT',  'Finn Cole',          'finn@test.com',       '123456'),
+  (15, 'STUDENT',  'Henry Cho',          'henry@test.com',      '123456'),
+  (16, 'STUDENT',  'Brad Langford',      'brad@test.com',       '123456')
 ON CONFLICT (id) DO NOTHING;
 
 -- Threads (6 threads with mixed urgency levels)
