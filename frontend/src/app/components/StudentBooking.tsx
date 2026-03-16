@@ -214,7 +214,7 @@ export function StudentBooking() {
         </div>
 
         {/* Form Content */}
-        <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-8 sm:p-10 min-h-[31rem] flex flex-col relative overflow-hidden">
+        <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-8 sm:p-10 min-h-124 flex flex-col relative overflow-hidden">
           {/* STEP 1: Service Type */}
           {step === 1 && (
             <div className="flex-1 animate-in fade-in slide-in-from-bottom-4">

@@ -609,7 +609,7 @@ export function WellbeingDashboard() {
                   <h3 className="text-xl font-bold text-gray-900 mb-1">
                     Participants
                   </h3>
-                  <p className="text-sm text-gray-500 font-medium truncate max-w-[250px]">
+                  <p className="text-sm text-gray-500 font-medium truncate max-w-62.5">
                     {selectedWorkshop.title}
                   </p>
                 </div>
