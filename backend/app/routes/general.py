@@ -30,7 +30,7 @@ def list_users():
                 "id": str(u.id),
                 "name": u.name,
                 "role": u.role,
-                "email": getattr(u, "email", "") or "",
+                "email": u.email,
             }
             for u in users
         ]
