@@ -95,19 +95,20 @@ export function WellbeingDashboard() {
     fetchWorkshops();
   }, [filterType]);
 
-  const filteredWorkshops = workshops.filter((workshop) => {
-    return (
-      workshop.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      workshop.facilitator.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  function isWorkshopActive(w: Workshop) {
+    if (!w.date || !w.time) return false;
+    const endDateTime = new Date(`${w.date}T${w.time}`);
+    return endDateTime >= new Date() && w.status !== "completed";
+  }
+
+  const activeWorkshops = workshops.filter(isWorkshopActive);
+  const historyWorkshops = workshops.filter((w) => !isWorkshopActive(w));
 
   const stats = {
-    totalWorkshops: workshops.length,
-    totalCapacity: workshops.reduce((sum, w) => sum + w.capacity, 0),
-    totalBooked: workshops.reduce((sum, w) => sum + w.booked, 0),
+    totalWorkshops: activeWorkshops.length,
+    totalCapacity: activeWorkshops.reduce((sum, w) => sum + w.capacity, 0),
+    totalBooked: activeWorkshops.reduce((sum, w) => sum + w.booked, 0),
   };
-
   const utilizationRate =
     stats.totalCapacity > 0
       ? Math.round((stats.totalBooked / stats.totalCapacity) * 100)
@@ -378,18 +379,15 @@ export function WellbeingDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {filteredWorkshops.length === 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-12">
+          {activeWorkshops.length === 0 ? (
             <div className="col-span-full text-center py-16 bg-white rounded-2xl border border-gray-200">
               <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">
-                No workshops available
-              </p>
+              <p className="text-gray-500 font-medium">No active workshops</p>
             </div>
           ) : (
-            filteredWorkshops.map((workshop) => {
+            activeWorkshops.map((workshop) => {
               const isMine = workshop.facilitator_id === currentUserId;
-
               return (
                 <div
                   key={workshop.id}
@@ -475,6 +473,61 @@ export function WellbeingDashboard() {
                 </div>
               );
             })
+          )}
+        </div>
+
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">History</h2>
+          {historyWorkshops.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center opacity-75">
+              <p className="text-sm text-gray-500">No history.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {historyWorkshops.map((workshop) => (
+                <div
+                  key={workshop.id}
+                  className="bg-white rounded-2xl border border-gray-100 p-6 opacity-75"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-1">
+                        {workshop.title}
+                      </h3>
+                      <span className="text-sm font-medium px-2 py-0.5 rounded-md bg-gray-50 text-gray-500">
+                        Host: {workshop.facilitator}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-y-3 text-sm text-gray-600 mb-6 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-gray-400" />{" "}
+                      {workshop.date}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-400" />{" "}
+                      {workshop.time} ({workshop.duration})
+                    </div>
+                    <div className="flex items-center gap-2 col-span-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />{" "}
+                      {workshop.location}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 mt-auto">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-700 font-medium text-sm">
+                          Registrations
+                        </span>
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                          {workshop.booked} / {workshop.capacity}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
