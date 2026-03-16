@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AlertCircle,
   CalendarDays,
@@ -25,89 +26,7 @@ type Activity = {
   studentName?: string;
 };
 
-const FIXED_ROTA: Activity[] = [
-  {
-    id: "1",
-    title: "1-on-1 Counseling",
-    type: "session",
-    category: "Personal Wellbeing",
-    date: "2026-03-09",
-    time: "10:00",
-    duration: "50 min",
-    capacity: 1,
-    booked: 1,
-    status: "upcoming",
-    facilitator: "Emily Gilmore",
-    studentName: "Rory Gilmore",
-  },
-  {
-    id: "2",
-    title: "1-on-1 Counseling",
-    type: "session",
-    category: "Academic Support",
-    date: "2026-03-10",
-    time: "14:00",
-    duration: "50 min",
-    capacity: 1,
-    booked: 0,
-    status: "upcoming",
-    facilitator: "Emily Gilmore",
-  },
-  {
-    id: "3",
-    title: "1-on-1 Counseling",
-    type: "session",
-    category: "Career Guidance",
-    date: "2026-03-11",
-    time: "09:00",
-    duration: "50 min",
-    capacity: 1,
-    booked: 1,
-    status: "upcoming",
-    facilitator: "Emily Gilmore",
-    studentName: "Lane Kim",
-  },
-  {
-    id: "4",
-    title: "1-on-1 Counseling",
-    type: "session",
-    category: "Personal Wellbeing",
-    date: "2026-03-12",
-    time: "11:00",
-    duration: "50 min",
-    capacity: 1,
-    booked: 0,
-    status: "upcoming",
-    facilitator: "Emily Gilmore",
-  },
-  {
-    id: "5",
-    title: "1-on-1 Counseling",
-    type: "session",
-    category: "Academic Support",
-    date: "2026-03-13",
-    time: "15:00",
-    duration: "50 min",
-    capacity: 1,
-    booked: 1,
-    status: "upcoming",
-    facilitator: "Emily Gilmore",
-    studentName: "Paris Geller",
-  },
-  {
-    id: "6",
-    title: "1-on-1 Counseling",
-    type: "session",
-    category: "Personal Wellbeing",
-    date: "2026-03-12",
-    time: "14:00",
-    duration: "50 min",
-    capacity: 1,
-    booked: 0,
-    status: "upcoming",
-    facilitator: "Sookie St. James",
-  },
-];
+const API_BASE = "http://localhost:5001/api";
 
 export function TeamRota() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -125,8 +44,32 @@ export function TeamRota() {
     const fetchActivities = async () => {
       setIsLoading(true);
       try {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-        setActivities(FIXED_ROTA);
+        const response = await fetch(`${API_BASE}/activities?type=session`);
+
+        if (response.ok) {
+          const data = await response.json();
+          const fetchedData =
+            data.activities || (Array.isArray(data) ? data : []);
+
+          const mappedActivities = fetchedData.map((a: any) => ({
+            id: String(a.id),
+            title: a.title || "1-on-1 Counseling",
+            type: "session",
+            category: a.category || "General Support",
+            date: a.date || (a.start_time ? a.start_time.split("T")[0] : ""),
+            time:
+              a.time ||
+              (a.start_time ? a.start_time.split("T")[1].substring(0, 5) : ""),
+            duration: a.duration || "50 min",
+            capacity: a.capacity || 1,
+            booked: a.booked || (a.participants?.length > 0 ? 1 : 0),
+            status: a.status || "upcoming",
+            facilitator: a.facilitator,
+            studentName: a.studentName || a.participants?.[0]?.name,
+          }));
+
+          setActivities(mappedActivities);
+        }
       } catch (error) {
         console.error("Error fetching rota:", error);
       } finally {
@@ -181,6 +124,7 @@ export function TeamRota() {
   return (
     <div className="min-h-full bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto">
+        {/* Header */}
         <div className="flex flex-col items-center justify-center mb-10 mt-2">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -222,6 +166,7 @@ export function TeamRota() {
           </div>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 w-full">
           <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200 flex items-center justify-between">
             <div className="flex-1">
@@ -230,21 +175,19 @@ export function TeamRota() {
               </p>
               {myRota.find(
                 (a) =>
-                  a.booked > 0 &&
-                  new Date(`${a.date} ${a.time}`) >= new Date("2026-03-01"),
+                  a.booked > 0 && new Date(`${a.date}T${a.time}`) >= new Date(),
               ) ? (
                 (() => {
                   const next = myRota
                     .filter(
                       (a) =>
                         a.booked > 0 &&
-                        new Date(`${a.date} ${a.time}`) >=
-                          new Date("2026-03-01"),
+                        new Date(`${a.date}T${a.time}`) >= new Date(),
                     )
                     .sort(
                       (a, b) =>
-                        new Date(`${a.date} ${a.time}`).getTime() -
-                        new Date(`${b.date} ${b.time}`).getTime(),
+                        new Date(`${a.date}T${a.time}`).getTime() -
+                        new Date(`${b.date}T${b.time}`).getTime(),
                     )[0];
                   return (
                     <div className="flex flex-col">
@@ -281,7 +224,7 @@ export function TeamRota() {
                   {bookedCount}
                 </p>
                 <p className="text-xs text-gray-400">
-                  / {myRota.length} fixed slots
+                  / {myRota.length} assigned slots
                 </p>
               </div>
             </div>
@@ -291,6 +234,7 @@ export function TeamRota() {
           </div>
         </div>
 
+        {/* Calendar View */}
         {viewMode === "calendar" && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50/50">
@@ -425,6 +369,7 @@ export function TeamRota() {
           </div>
         )}
 
+        {/* List View */}
         {viewMode === "list" && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="divide-y divide-gray-100">
