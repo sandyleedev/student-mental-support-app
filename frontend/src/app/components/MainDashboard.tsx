@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Bell,
   Calendar,
@@ -11,7 +12,7 @@ import {
   MessageCircle,
   Settings,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CounselorChat } from "./CounselorChat.tsx";
 import { CounselorDashboard } from "./CounselorDashboard.tsx";
 import { MyBookings } from "./MyBookings.tsx";
@@ -24,30 +25,6 @@ import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
 type UserRole = "student" | "counselor";
 type StudentView = "request" | "conversations" | "booking" | "my-bookings";
 type TeamView = "queue" | "chats" | "activities" | "rota";
-
-const MOCK_USERS = [
-  {
-    id: 1,
-    role: "student",
-    name: "Rory Gilmore",
-    email: "rory@test.com",
-    password: "123456",
-  },
-  {
-    id: 2,
-    role: "student",
-    name: "Lane Kim",
-    email: "lane@test.com",
-    password: "123456",
-  },
-  {
-    id: 3,
-    role: "counselor",
-    name: "Emily Gilmore",
-    email: "emily@test.com",
-    password: "123456",
-  },
-];
 
 export function MainDashboard() {
   const [email, setEmail] = useState("emily@test.com");
@@ -62,6 +39,20 @@ export function MainDashboard() {
     undefined,
   );
   const [teamView, setTeamView] = useState<TeamView>("queue");
+  const [users, setUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const [studentsRes, counselorsRes] = await Promise.all([
+        fetch("http://127.0.0.1:5001/api/users?role=STUDENT"),
+        fetch("http://127.0.0.1:5001/api/users?role=COUNSELOR"),
+      ]);
+      const students = (await studentsRes.json()).users || [];
+      const counselors = (await counselorsRes.json()).users || [];
+      setUsers([...students, ...counselors]);
+    };
+    fetchUsers();
+  }, []);
 
   const userName = localStorage.getItem("user_name") || "User";
   const userAvatar = userName
@@ -79,19 +70,28 @@ export function MainDashboard() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const matchedUser = MOCK_USERS.find(
-        (user) => user.email === email && user.password === password,
+      const matchedUser = users.find(
+        (user) => user.email === email && "123456" === password,
       );
 
       if (matchedUser) {
         localStorage.setItem("user_id", matchedUser.id.toString());
-        localStorage.setItem("role", matchedUser.role);
+        localStorage.setItem(
+          "role",
+          matchedUser.role.toLowerCase() === "student"
+            ? "student"
+            : "counselor",
+        );
         localStorage.setItem("user_name", matchedUser.name);
 
-        setUserRole(matchedUser.role as UserRole);
+        setUserRole(
+          matchedUser.role.toLowerCase() === "student"
+            ? "student"
+            : "counselor",
+        );
         setIsLoggedIn(true);
 
-        if (matchedUser.role === "student") {
+        if (matchedUser.role.toLowerCase() === "student") {
           setStudentView("request");
         } else {
           setTeamView("queue");
