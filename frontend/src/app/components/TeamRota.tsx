@@ -922,7 +922,7 @@ export function TeamRota() {
 
       {modalMode === "manage_students" && selectedActivity && (
         <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[500px] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-125 flex flex-col">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-bold text-gray-900">
                 Manage Student

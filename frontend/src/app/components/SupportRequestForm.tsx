@@ -1,166 +1,199 @@
-import { AlertCircle, Heart, Send } from "lucide-react";
+import { ArrowRight, ChevronDown, HeartHandshake } from "lucide-react";
 import { useState } from "react";
+import type { UrgencyResult } from "../../utils/scoring";
+import { UrgencyScreening } from "../components/UrgencyScreening";
+
+type Step = "intro" | "screening" | "form";
 
 export function SupportRequestForm() {
+  const [step, setStep] = useState<Step>("intro");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [urgencyData, setUrgencyData] = useState<UrgencyResult | null>(null);
+  const [errors, setErrors] = useState({ topic: "", description: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    topic: "",
+    topic: "Anxiety or Stress",
     description: "",
-    // urgencyLevel: "medium",
+    urgency_level: "urgent",
   });
 
-  const [errors, setErrors] = useState({
-    topic: "",
-    description: "",
-  });
+  const handleScreeningComplete = (result: UrgencyResult) => {
+    setUrgencyData(result);
+    const urgencyMap: Record<string, "urgent" | "medium" | "low"> = {
+      urgent: "urgent",
+      medium: "medium",
+      low: "low",
+    };
+    setFormData((prev) => ({
+      ...prev,
+      urgency_level: urgencyMap[result.urgency_level] || "urgent",
+    }));
+    setStep("form");
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors = { topic: "", description: "" };
-    if (!formData.topic) newErrors.topic = "Please select a topic";
-    if (formData.description.length < 5) {
-      newErrors.description = `Please provide more detail (${formData.description.length}/5)`;
+
+    if (!formData.topic || formData.topic.trim() === "") {
+      newErrors.topic = "Please select a topic";
+    }
+    if (formData.description.trim().length < 5) {
+      newErrors.description = `Please provide more detail (${formData.description.trim().length}/5)`;
     }
 
     setErrors(newErrors);
 
-    if (!newErrors.topic && !newErrors.description) {
-      try {
-        const userId = localStorage.getItem("user_id") || "1";
+    if (newErrors.topic || newErrors.description) {
+      return;
+    }
 
-        const response = await fetch("http://localhost:5001/api/threads", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            student_id: parseInt(userId),
-            topic: formData.topic,
-            description: formData.description,
-            // urgency: formData.urgencyLevel.toUpperCase(),
-          }),
+    setIsSubmitting(true);
+
+    try {
+      const userId = localStorage.getItem("user_id") || "1";
+
+      const response = await fetch("http://localhost:5001/api/threads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: parseInt(userId, 10),
+          topic: formData.topic,
+          description: formData.description.trim(),
+          urgency_level: formData.urgency_level,
+        }),
+      });
+
+      if (response.ok) {
+        alert("Support request submitted successfully! 💙");
+        setFormData({
+          topic: "Anxiety or Stress",
+          description: "",
+          urgency_level: "urgent",
         });
-
-        if (response.ok) {
-          alert("Support request submitted successfully! 💙");
-          setFormData({ topic: "", description: "" });
-        }
-      } catch (error) {
-        console.error("Submission failed:", error);
+        setErrors({ topic: "", description: "" });
+        setUrgencyData(null);
+        setStep("intro");
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(
+          errorData.message || "Failed to submit request. Please try again.",
+        );
       }
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Error submitting request. Please check your connection.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  //   const urgencyLevels = [
-  //     {
-  //       value: "low",
-  //       label: "Low",
-  //       color: "bg-green-100 text-green-700 border-green-300",
-  //     },
-  //     {
-  //       value: "medium",
-  //       label: "Medium",
-  //       color: "bg-yellow-100 text-yellow-700 border-yellow-300",
-  //     },
-  //     {
-  //       value: "high",
-  //       label: "High",
-  //       color: "bg-rose-100 text-rose-700 border-rose-300",
-  //     },
-  //   ];
-
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-          <Heart className="w-8 h-8 text-blue-600" />
-        </div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          New Support Request
-        </h1>
-        <p className="text-gray-600">
-          Your information will remain anonymous to the counselor.
-        </p>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-8"
-      >
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Topic *
-          </label>
-          <select
-            value={formData.topic}
-            onChange={(e) =>
-              setFormData({ ...formData, topic: e.target.value })
-            }
-            className={`w-full px-4 py-3 border rounded-2xl bg-gray-50 focus:ring-2 focus:ring-blue-300 outline-none ${
-              errors.topic ? "border-rose-300" : "border-gray-200"
-            }`}
-          >
-            <option value="">Select a topic...</option>
-            <option value="Academic Stress">Academic Stress</option>
-            <option value="Personal Well-being">Personal Well-being</option>
-            <option value="Social/Relationship">Social/Relationship</option>
-            <option value="Other">Other</option>
-          </select>
-          {errors.topic && (
-            <p className="text-rose-600 text-sm flex items-center gap-1">
-              <AlertCircle className="w-4 h-4" />
-              {errors.topic}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Description *
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
-            }
-            rows={5}
-            placeholder="Tell us what's on your mind..."
-            className={`w-full px-4 py-3 border rounded-2xl bg-gray-50 focus:ring-2 focus:ring-blue-300 outline-none ${
-              errors.description ? "border-rose-300" : "border-gray-200"
-            }`}
-          />
-        </div>
-
-        {/* <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">
-            Urgency Level *
-          </label>
-          <div className="grid grid-cols-3 gap-3 p-1.5 bg-gray-100 rounded-2xl">
-            {urgencyLevels.map((level) => (
-              <button
-                key={level.value}
-                type="button"
-                onClick={() =>
-                  setFormData({ ...formData, urgencyLevel: level.value })
-                }
-                className={`py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  formData.urgencyLevel === level.value
-                    ? `${level.color} shadow-sm`
-                    : "bg-white text-gray-500"
-                }`}
-              >
-                {level.label}
-              </button>
-            ))}
+    <div className="min-h-full bg-gray-50 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
+      {/* 1. Landing Page (Intro) */}
+      {step === "intro" && (
+        <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-10 sm:p-14 w-full max-w-2xl text-center animate-in fade-in slide-in-from-bottom-4">
+          <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-8">
+            <HeartHandshake className="w-12 h-12 text-blue-600" />
           </div>
-        </div> */}
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            How can we support you?
+          </h1>
+          <p className="text-lg text-gray-500 mb-10 leading-relaxed max-w-lg mx-auto">
+            Before you fill out the request form, we'd like to ask a few quick
+            questions to understand how you're feeling today. This helps our
+            wellbeing team prioritize your request and provide the best support.
+          </p>
+          <button
+            onClick={() => setStep("screening")}
+            className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 hover:gap-4"
+          >
+            Start Quick Check-in <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
-        <button
-          type="submit"
-          onClick={handleSubmit}
-          className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-        >
-          <Send className="w-5 h-5" /> Submit Request
-        </button>
-      </form>
+      {/* 2. Urgency Screening */}
+      {step === "screening" && (
+        <UrgencyScreening onComplete={handleScreeningComplete} />
+      )}
+
+      {/* 3. Main Request Form */}
+      {step === "form" && (
+        <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 p-8 sm:p-10 w-full max-w-3xl animate-in fade-in slide-in-from-right-4">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Request Support
+          </h2>
+          <p className="text-gray-500 mb-8">
+            Please provide some details about what you'd like to discuss.
+          </p>
+
+          <form onSubmit={handleFormSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Primary Topic
+              </label>
+              <div className="relative">
+                <select
+                  value={formData.topic}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, topic: e.target.value }))
+                  }
+                  className="w-full px-4 py-3 pr-10 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50/50 appearance-none cursor-pointer"
+                >
+                  <option value="Anxiety or Stress">Anxiety or Stress</option>
+                  <option value="Academic Pressure">Academic Pressure</option>
+                  <option value="Relationship Issues">
+                    Relationship Issues
+                  </option>
+                  <option value="Other">Other</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+              </div>
+              {errors.topic && (
+                <p className="text-red-500 text-sm mt-1">{errors.topic}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                rows={4}
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50/50 resize-none"
+                placeholder="Please describe what you'd like support with..."
+              ></textarea>
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-gray-500 text-xs">
+                  {formData.description.trim().length}/5 characters minimum
+                </p>
+                {errors.description && (
+                  <p className="text-red-500 text-sm">{errors.description}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-6">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Request"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
