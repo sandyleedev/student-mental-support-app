@@ -13,6 +13,7 @@ interface Thread {
   student_id: number;
   topic: string;
   status: "WAITING" | "REPLIED";
+  urgency_level: "urgent" | "medium" | "low";
   updated_at: string;
 }
 
@@ -32,7 +33,17 @@ export function CounselorDashboard({
           `http://localhost:5001/api/threads?user_id=${counselorId}&status=${statusFilter}`,
         );
         const data = await response.json();
-        setThreads(data.threads);
+
+        const sortedThreads = (data.threads || []).sort(
+          (a: Thread, b: Thread) => {
+            const urgencyOrder = { urgent: 0, medium: 1, low: 2 };
+            return (
+              urgencyOrder[a.urgency_level] - urgencyOrder[b.urgency_level]
+            );
+          },
+        );
+
+        setThreads(sortedThreads);
       } catch (error) {
         console.error("Failed to fetch threads:", error);
       }
@@ -70,10 +81,36 @@ export function CounselorDashboard({
     }
   };
 
-  const getUrgencyColor = (status: string) => {
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case "urgent":
+        return "bg-red-100 text-red-700 border-red-300";
+      case "medium":
+        return "bg-yellow-100 text-yellow-700 border-yellow-300";
+      case "low":
+        return "bg-green-100 text-green-700 border-green-300";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-300";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
     return status === "WAITING"
-      ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+      ? "bg-blue-100 text-blue-700 border-blue-300"
       : "bg-green-100 text-green-700 border-green-300";
+  };
+
+  const getRowBgColor = (urgency: string) => {
+    switch (urgency) {
+      case "urgent":
+        return "bg-red-50 hover:bg-red-100";
+      case "medium":
+        return "bg-yellow-50 hover:bg-yellow-100";
+      case "low":
+        return "bg-gray-50 hover:bg-gray-100";
+      default:
+        return "hover:bg-gray-50";
+    }
   };
 
   return (
@@ -119,19 +156,22 @@ export function CounselorDashboard({
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase">
                     Student (ID)
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase">
                     Topic
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase">
+                    Urgency
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase">
                     Last Updated
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase">
                     Action
                   </th>
                 </tr>
@@ -140,28 +180,49 @@ export function CounselorDashboard({
                 {threads.map((thread) => (
                   <tr
                     key={thread.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className={`transition-all ${
+                      thread.urgency_level === "urgent"
+                        ? "bg-red-50 hover:bg-red-100 shadow-lg  border-2 border-red-200"
+                        : getRowBgColor(thread.urgency_level)
+                    }`}
                   >
-                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
-                      Student #{thread.student_id} (Anonymous)
+                    <td className="px-6 py-4 text-sm text-gray-900 font-medium text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        Student #{thread.student_id}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate">
+                    <td className="px-6 py-4 text-sm text-gray-600 max-w-md truncate text-center">
                       {thread.topic}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      <div className="flex items-center gap-2">
+                    <td className="px-6 py-4 text-center">
+                      <span
+                        className={`w-25 px-4 py-2 rounded-full text-xs font-bold border-2 inline-block ${
+                          thread.urgency_level === "urgent"
+                            ? "bg-red-100 text-red-700 border-red-500 shadow-md"
+                            : getUrgencyColor(thread.urgency_level)
+                        }`}
+                      >
+                        {thread.urgency_level === "urgent" && "🔴 "}
+                        {thread.urgency_level === "medium" && "🟡 "}
+                        {thread.urgency_level === "low" && "🟢 "}
+                        {thread.urgency_level.charAt(0).toUpperCase() +
+                          thread.urgency_level.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <Calendar className="w-4 h-4" />
                         {new Date(thread.updated_at).toLocaleDateString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-center">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs border ${getUrgencyColor(thread.status)}`}
+                        className={`px-3 py-1 rounded-full text-xs border font-medium inline-block ${getStatusColor(thread.status)}`}
                       >
                         {thread.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => {
                           if (thread.status === "WAITING") {
@@ -170,7 +231,7 @@ export function CounselorDashboard({
                             handleActionClick(thread.id, thread.status);
                           }
                         }}
-                        className={`p-2 rounded-lg transition-colors ${
+                        className={`p-2 rounded-lg transition-colors inline-flex items-center justify-center ${
                           thread.status === "WAITING"
                             ? "text-blue-600 hover:bg-blue-50"
                             : "text-green-600 hover:bg-green-50"

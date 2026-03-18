@@ -13,14 +13,14 @@ import {
   Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { StudentBooking } from "./BookingEvent.tsx";
+import { MyBookings } from "./BookingsManagement.tsx";
 import { CounselorChat } from "./CounselorChat.tsx";
-import { CounselorDashboard } from "./CounselorDashboard.tsx";
-import { MyBookings } from "./MyBookings.tsx";
-import { StudentBooking } from "./StudentBooking.tsx";
+import { CounselorDashboard } from "./RequestDashboard.tsx";
+import { TeamRota } from "./SessionManagement.tsx";
 import { StudentChat } from "./StudentChat.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
-import { TeamRota } from "./TeamRota.tsx";
-import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
+import { WellbeingDashboard } from "./WorkshopManagement.tsx";
 
 type UserRole = "student" | "counselor";
 type StudentView = "request" | "conversations" | "booking" | "my-bookings";
@@ -250,7 +250,7 @@ export function MainDashboard() {
 
             <div className="px-4 py-1.5 bg-gray-100 rounded-full text-sm font-medium text-gray-600 flex items-center gap-2">
               <span
-                className={`w-2 h-2 rounded-full ${userRole === "student" ? "bg-teal-500" : "bg-green-500"}`}
+                className={`w-2 h-2 rounded-full ${userRole === "student" ? "bg-green-500" : "bg-green-500"}`}
               />
               {userRole === "student" ? "Student Portal" : "Staff Portal"}
             </div>
@@ -264,7 +264,7 @@ export function MainDashboard() {
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-2 pl-2 py-1 hover:bg-gray-100 rounded-lg"
                 >
-                  <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs">
+                  <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs">
                     {userAvatar}
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
