@@ -300,7 +300,7 @@ export function WellbeingDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-1">
-              Team Workshops
+              Workshop Management
             </h1>
             <p className="text-sm text-gray-500">
               Manage activities and student registrations.

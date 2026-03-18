@@ -250,7 +250,7 @@ export function MainDashboard() {
 
             <div className="px-4 py-1.5 bg-gray-100 rounded-full text-sm font-medium text-gray-600 flex items-center gap-2">
               <span
-                className={`w-2 h-2 rounded-full ${userRole === "student" ? "bg-blue-500" : "bg-green-500"}`}
+                className={`w-2 h-2 rounded-full ${userRole === "student" ? "bg-teal-500" : "bg-green-500"}`}
               />
               {userRole === "student" ? "Student Portal" : "Staff Portal"}
             </div>
@@ -264,7 +264,7 @@ export function MainDashboard() {
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-2 pl-2 py-1 hover:bg-gray-100 rounded-lg"
                 >
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
+                  <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white text-xs">
                     {userAvatar}
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -369,13 +369,13 @@ export function MainDashboard() {
                         : "text-gray-600 hover:bg-gray-50"
                     }`}
                   >
-                    <Calendar className="w-5 h-5" /> Activities
+                    <Calendar className="w-5 h-5" /> Workshop
                   </button>
                   <button
                     onClick={() => setTeamView("rota")}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${teamView === "rota" ? "bg-green-50 text-green-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
                   >
-                    <Clock className="w-5 h-5" /> My Rota
+                    <Clock className="w-5 h-5" /> Counselling sessions
                   </button>
                 </div>
               </>
