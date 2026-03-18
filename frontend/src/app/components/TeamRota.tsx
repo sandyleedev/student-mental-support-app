@@ -22,7 +22,11 @@ type Activity = {
   booked: number;
   status: "upcoming" | "ongoing" | "completed";
   facilitator: string;
-  studentName?: string;
+  participants?: {
+    id: string;
+    name: string;
+    email: string;
+  }[];
 };
 
 const FIXED_ROTA: Activity[] = [
@@ -38,7 +42,7 @@ const FIXED_ROTA: Activity[] = [
     booked: 1,
     status: "upcoming",
     facilitator: "Emily Gilmore",
-    studentName: "Rory Gilmore",
+    participants: [{ id: "1", name: "Rory Gilmore", email: "rory@test.com" }],
   },
   {
     id: "2",
@@ -65,7 +69,7 @@ const FIXED_ROTA: Activity[] = [
     booked: 1,
     status: "upcoming",
     facilitator: "Emily Gilmore",
-    studentName: "Lane Kim",
+    participants: [{ id: "2", name: "Lane Kim", email: "lane@test.com" }],
   },
   {
     id: "4",
@@ -92,7 +96,7 @@ const FIXED_ROTA: Activity[] = [
     booked: 1,
     status: "upcoming",
     facilitator: "Emily Gilmore",
-    studentName: "Paris Geller",
+    participants: [{ id: "8", name: "Paris Geller", email: "paris@test.com" }],
   },
   {
     id: "6",
@@ -249,7 +253,7 @@ export function TeamRota() {
                   return (
                     <div className="flex flex-col">
                       <p className="text-lg font-bold text-blue-600 truncate">
-                        {next.studentName}
+                        {next.participants?.[0]?.name}
                       </p>
                       <p className="text-xs text-gray-500 font-medium">
                         {new Date(next.date).toLocaleDateString("en-US", {
@@ -412,7 +416,7 @@ export function TeamRota() {
                             <div
                               className={`text-[10px] truncate ${isBooked ? "text-green-600 font-semibold" : "text-blue-600"}`}
                             >
-                              {isBooked ? slot.studentName : "Available"}
+                              {isBooked ? slot.participants?.[0]?.name : "Available"}
                             </div>
                           </div>
                         );
@@ -469,7 +473,7 @@ export function TeamRota() {
                               <User className="w-4 h-4 text-blue-600" />
                             </div>
                             <span className="font-medium">
-                              {slot.studentName}
+                              {slot.participants?.[0]?.name}
                             </span>
                           </div>
                         ) : (
