@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS users (
   id         BIGSERIAL    PRIMARY KEY,
   role       VARCHAR(20)  NOT NULL CHECK (role IN ('STUDENT', 'COUNSELLOR')),
   name       VARCHAR(255) NOT NULL,
+  email      VARCHAR(255) NOT NULL UNIQUE,
+  password   VARCHAR(255) NOT NULL,
   created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
@@ -13,6 +15,7 @@ CREATE TABLE IF NOT EXISTS support_threads (
   id         BIGSERIAL    PRIMARY KEY,
   student_id BIGINT       NOT NULL REFERENCES users(id),
   topic      VARCHAR(255) NOT NULL,
+  urgency_level VARCHAR(20) NOT NULL CHECK (urgency_level IN ('URGENT', 'MEDIUM', 'LOW')),
   status     VARCHAR(20)  NOT NULL CHECK (status IN ('WAITING', 'REPLIED')),
   created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ  NOT NULL DEFAULT now()
@@ -22,6 +25,8 @@ CREATE INDEX IF NOT EXISTS idx_support_threads_student_created
   ON support_threads (student_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_support_threads_status_created
   ON support_threads (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_support_threads_urgency_created
+  ON support_threads (urgency_level, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS messages (
   id         BIGSERIAL    PRIMARY KEY,
