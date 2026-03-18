@@ -488,7 +488,7 @@ export function TeamRota() {
                     )[0];
                   return (
                     <div className="flex flex-col">
-                      <p className="text-lg font-bold text-blue-600 truncate">
+                      <p className="text-lg font-bold text-teal-600 truncate">
                         {next.participants?.[0]?.name}
                       </p>
                       <p className="text-xs text-gray-500 font-medium">

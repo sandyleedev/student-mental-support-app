@@ -13,14 +13,14 @@ import {
   Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { StudentBooking } from "./BookingEvent.tsx";
+import { MyBookings } from "./BookingsManagement.tsx";
 import { CounselorChat } from "./CounselorChat.tsx";
-import { CounselorDashboard } from "./CounselorDashboard.tsx";
-import { MyBookings } from "./MyBookings.tsx";
-import { StudentBooking } from "./StudentBooking.tsx";
+import { CounselorDashboard } from "./RequestDashboard.tsx";
+import { TeamRota } from "./SessionManagement.tsx";
 import { StudentChat } from "./StudentChat.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
-import { TeamRota } from "./TeamRota.tsx";
-import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
+import { WellbeingDashboard } from "./WorkshopManagement.tsx";
 
 type UserRole = "student" | "counselor";
 type StudentView = "request" | "conversations" | "booking" | "my-bookings";
