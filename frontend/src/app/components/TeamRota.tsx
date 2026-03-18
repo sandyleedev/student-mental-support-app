@@ -92,7 +92,7 @@ export function TeamRota() {
               : a.studentName
                 ? [
                     {
-                      id: String(a.student_id),
+                      id: a.id,
                       name: a.studentName || "Unknown Student",
                       email: a.student_email || "",
                     },
