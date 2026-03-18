@@ -5,9 +5,12 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  Edit2,
   List,
   Lock,
+  Trash2,
   User,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -39,6 +42,18 @@ export function TeamRota() {
   const baseMonthDate = new Date("2026-03-01");
 
   const currentCounselor = localStorage.getItem("user_name") || "Emily Gilmore";
+
+  // Modal & Edit State
+  const [modalMode, setModalMode] = useState<"edit" | "cancel" | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+    null,
+  );
+  const [editForm, setEditForm] = useState({
+    date: "",
+    time: "",
+    duration: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -110,6 +125,88 @@ export function TeamRota() {
 
   const formatYYYYMMDD = (d: number) => {
     return `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  };
+
+  // Edit handlers
+  const handleOpenEditModal = (activity: Activity) => {
+    setSelectedActivity(activity);
+    setEditForm({
+      date: activity.date,
+      time: activity.time,
+      duration: activity.duration,
+    });
+    setModalMode("edit");
+  };
+
+  const handleOpenCancelModal = (activity: Activity) => {
+    setSelectedActivity(activity);
+    setModalMode("cancel");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedActivity) return;
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/activities/${selectedActivity.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date: editForm.date,
+            time: editForm.time,
+            duration: editForm.duration,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        setActivities((prev) =>
+          prev.map((a) =>
+            a.id === selectedActivity.id ? { ...a, ...editForm } : a,
+          ),
+        );
+        setModalMode(null);
+        setSelectedActivity(null);
+      } else {
+        alert("Failed to save changes.");
+      }
+    } catch (error) {
+      console.error("Error saving activity:", error);
+      alert("Error saving activity.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!selectedActivity) return;
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/activities/${selectedActivity.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (response.ok) {
+        setActivities((prev) =>
+          prev.filter((a) => a.id !== selectedActivity.id),
+        );
+        setModalMode(null);
+        setSelectedActivity(null);
+      } else {
+        alert("Failed to cancel activity.");
+      }
+    } catch (error) {
+      console.error("Error cancelling activity:", error);
+      alert("Error cancelling activity.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -340,7 +437,7 @@ export function TeamRota() {
                         return (
                           <div
                             key={slot.id}
-                            className={`p-1.5 rounded border shadow-sm ${
+                            className={`p-1.5 rounded border shadow-sm group relative ${
                               isBooked
                                 ? "bg-green-50 border-green-200"
                                 : "bg-white border-blue-200"
@@ -352,6 +449,22 @@ export function TeamRota() {
                               >
                                 {slot.time}
                               </span>
+                              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleOpenEditModal(slot)}
+                                  className="p-0.5 rounded hover:bg-blue-100"
+                                  title="Edit"
+                                >
+                                  <Edit2 className="w-2.5 h-2.5 text-blue-600" />
+                                </button>
+                                <button
+                                  onClick={() => handleOpenCancelModal(slot)}
+                                  className="p-0.5 rounded hover:bg-red-100"
+                                  title="Cancel"
+                                >
+                                  <X className="w-2.5 h-2.5 text-red-600" />
+                                </button>
+                              </div>
                             </div>
                             <div
                               className={`text-[10px] truncate ${isBooked ? "text-green-600 font-semibold" : "text-blue-600"}`}
@@ -407,7 +520,7 @@ export function TeamRota() {
                           </p>
                         </div>
                       </div>
-                      <div className="sm:text-right">
+                      <div className="sm:text-right flex items-center gap-3">
                         {isBooked ? (
                           <div className="flex items-center sm:justify-end gap-2 text-sm text-gray-900">
                             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -423,6 +536,22 @@ export function TeamRota() {
                             <span>Waiting for student</span>
                           </div>
                         )}
+                        <div className="flex gap-1.5 border-l border-gray-200 pl-3">
+                          <button
+                            onClick={() => handleOpenEditModal(slot)}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg bg-gray-50 hover:bg-blue-50 transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenCancelModal(slot)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg bg-gray-50 hover:bg-red-50 transition-colors"
+                            title="Cancel"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -432,6 +561,124 @@ export function TeamRota() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {modalMode === "edit" && selectedActivity && (
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900">Edit Session</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={editForm.date}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, date: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={editForm.time}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, time: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Duration
+                </label>
+                <input
+                  type="text"
+                  value={editForm.duration}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, duration: e.target.value })
+                  }
+                  placeholder="e.g., 50 min"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                onClick={() => {
+                  setModalMode(null);
+                  setSelectedActivity(null);
+                }}
+                disabled={isSubmitting}
+                className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSubmitting}
+                className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:bg-blue-400"
+              >
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Modal */}
+      {modalMode === "cancel" && selectedActivity && (
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+            <div className="p-6 text-center">
+              <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-7 h-7 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Cancel Session?
+              </h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Are you sure you want to cancel this{" "}
+                <span className="font-semibold text-gray-700">
+                  {selectedActivity.title}
+                </span>{" "}
+                on{" "}
+                <span className="font-semibold text-gray-700">
+                  {selectedActivity.date}
+                </span>
+                ? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setModalMode(null);
+                    setSelectedActivity(null);
+                  }}
+                  disabled={isSubmitting}
+                  className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  Keep It
+                </button>
+                <button
+                  onClick={handleConfirmCancel}
+                  disabled={isSubmitting}
+                  className="flex-1 bg-red-600 text-white py-2.5 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:bg-red-400"
+                >
+                  {isSubmitting ? "Cancelling..." : "Yes, Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
