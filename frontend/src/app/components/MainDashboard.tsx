@@ -6,16 +6,19 @@ import {
   ClipboardList,
   Clock,
   Heart,
+  HeartHandshake,
   Lock,
   LogOut,
   Mail,
   MessageCircle,
+  Search,
   Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { StudentBooking } from "./BookingEvent.tsx";
 import { MyBookings } from "./BookingsManagement.tsx";
 import { CounselorChat } from "./CounselorChat.tsx";
+import { FAQForStudent } from "./FAQForStudent.tsx";
 import { CounselorDashboard } from "./RequestDashboard.tsx";
 import { TeamRota } from "./SessionManagement.tsx";
 import { StudentChat } from "./StudentChat.tsx";
@@ -23,7 +26,12 @@ import { SupportRequestForm } from "./SupportRequestForm.tsx";
 import { WellbeingDashboard } from "./WorkshopManagement.tsx";
 
 type UserRole = "student" | "counselor";
-type StudentView = "request" | "conversations" | "booking" | "my-bookings";
+type StudentView =
+  | "request"
+  | "conversations"
+  | "booking"
+  | "my-bookings"
+  | "FAQ";
 type TeamView = "queue" | "chats" | "activities" | "rota";
 
 export function MainDashboard() {
@@ -126,6 +134,13 @@ export function MainDashboard() {
         return <MyBookings onBookNew={() => setStudentView("booking")} />;
       if (studentView === "conversations") {
         return <StudentChat />;
+      }
+      if (studentView === "FAQ") {
+        return (
+          <FAQForStudent
+            onNavigateToSupport={() => setStudentView("request")}
+          />
+        );
       }
       return <SupportRequestForm />;
     }
@@ -301,7 +316,7 @@ export function MainDashboard() {
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  <ClipboardList className="w-5 h-5" /> New Request
+                  <HeartHandshake className="w-5 h-5" /> New Request
                 </button>
                 <button
                   onClick={() => setStudentView("conversations")}
@@ -332,6 +347,16 @@ export function MainDashboard() {
                   }`}
                 >
                   <ClipboardList className="w-5 h-5" /> My Bookings
+                </button>
+                <button
+                  onClick={() => setStudentView("FAQ")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    studentView === "FAQ"
+                      ? "bg-blue-50 text-blue-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Search className="w-5 h-5" /> FAQ
                 </button>
               </>
             ) : (
