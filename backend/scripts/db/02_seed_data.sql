@@ -151,8 +151,81 @@ INSERT INTO bookings (id, activity_id, student_id, status, cancelled_at) VALUES
   (58, 783, 13, 'CANCELLED', '2026-03-15 10:00:00+00')
 ON CONFLICT (id) DO NOTHING;
 
+-- FAQs
+INSERT INTO faqs (id, question, preview, answer, category) VALUES
+  (1, 'How to apply for an extension?', 'Learn about the eligibility criteria and the process for requesting a coursework extension...', 'To apply for an extension, you need to: 1) Log into the student portal, 2) Navigate to the Extensions section, 3) Fill out the extension request form with your reason and supporting documentation, 4) Submit the form at least 3 days before the deadline. Extensions are typically granted for medical reasons, family emergencies, or exceptional circumstances.', 'ACADEMIC_STRESS'),
+  (2, 'Managing test anxiety tips', 'Explore effective strategies to stay calm and focused before and during your exams...', 'Test anxiety is common and manageable. Try these strategies: 1) Practice deep breathing exercises before the exam, 2) Arrive early to settle in, 3) Read through all questions first, 4) Start with questions you know, 5) Take short breaks if allowed, 6) Maintain a positive mindset. Our counseling center also offers test anxiety workshops.', 'MENTAL_HEALTH'),
+  (3, 'Where is the student counseling center?', 'Find location details, opening hours, and contact information for the campus center...', 'The Student Counseling Center is located in Building A, Room 203. We are open Monday-Friday, 9:00 AM - 5:00 PM. For urgent matters after hours, please call our 24/7 crisis hotline at 0800-123-4567. You can also book appointments online through the CampusCompass platform.', 'CAMPUS_RESOURCES'),
+  (4, 'Understanding academic probation', 'A quick guide to what probation means for your studies and how you can get support...', 'Academic probation occurs when your GPA falls below the required threshold (typically 2.0). During probation: 1) You will receive academic advising support, 2) You may have course load restrictions, 3) You must improve your GPA within one semester, 4) Additional resources are available including tutoring and study skills workshops. Contact Academic Support Services for personalized guidance.', 'ACADEMIC_STRESS'),
+  (5, 'What if I miss a major deadline?', '...If you are struggling to meet a deadline due to mental health issues, you may be eligible for...', 'If you miss a major deadline due to circumstances beyond your control (illness, emergency, mental health crisis), you should: 1) Contact your professor immediately, 2) Provide documentation if possible, 3) Request a meeting to discuss options, 4) Contact the Student Support Office for advocacy. For mental health-related issues, our counseling center can provide documentation and support.', 'ACADEMIC_STRESS'),
+  (6, 'Applying for an assignment extension', '...Request an extension before the final deadline. Forms are available online...', 'Assignment extension requests should be submitted at least 48 hours before the due date when possible. Log into the student portal, go to My Courses, select the relevant assignment, and click "Request Extension." You will need to provide a reason and any supporting documentation. Typical reasons include illness, family emergency, or technical difficulties. Extensions are reviewed within 24 hours.', 'ACADEMIC_STRESS'),
+  (7, 'How to filter a student?', 'Learn how to use search and filter options to find relevant information...', 'You can filter information in several ways: 1) Use the search bar at the top to search by keywords, 2) Click on category tags to filter by topic, 3) Use the "All" button to reset filters. The search is smart and will find relevant results based on question content, not just titles.', 'CAMPUS_RESOURCES'),
+  (8, 'Dealing with homesickness', 'Strategies and resources to help you cope with being away from home...', 'Homesickness is a normal part of the college experience. Try these strategies: 1) Stay connected with family through regular video calls, 2) Create a comfortable space in your dorm, 3) Join clubs and activities to build new connections, 4) Maintain healthy routines, 5) Give yourself time to adjust. Our counseling center offers support groups for students dealing with homesickness.', 'MENTAL_HEALTH'),
+  (9, 'How to access mental health resources?', 'Information about available mental health services and how to book appointments...', 'CampusCompass offers several mental health resources: 1) One-on-one counseling sessions (book through the platform), 2) Group therapy and workshops, 3) Crisis support available 24/7, 4) Self-help resources and apps, 5) Peer support programs. All services are free and confidential for enrolled students. Book your first appointment through the Booking section.', 'MENTAL_HEALTH'),
+  (10, 'Study skills and time management workshops', 'Join our workshops to improve your academic performance and manage your time better...', 'We offer regular workshops on: 1) Effective study techniques, 2) Time management strategies, 3) Note-taking skills, 4) Exam preparation, 5) Research and writing skills. Check the Activities section for upcoming workshop schedules. Workshops are free, interactive, and led by experienced academic advisors. You can also book one-on-one academic coaching sessions.', 'ACADEMIC_STRESS'),
+  (11, 'Crisis support - when to seek immediate help', 'Understand when to reach out for emergency support and available crisis resources...', 'Seek immediate help if you are: 1) Having thoughts of self-harm, 2) Experiencing a mental health crisis, 3) In immediate danger. Available resources: Campus Security (24/7): 123-456-7890, Emergency Services: 999, Crisis Hotline: 0800-123-4567. The counseling center also has walk-in crisis appointments during business hours. You are never alone - help is always available.', 'MENTAL_HEALTH'),
+  (12, 'Campus wellness activities and events', 'Explore upcoming wellness events, meditation sessions, and stress-relief activities...', 'Join our regular wellness activities: 1) Mindfulness meditation sessions (Tuesdays, 5 PM), 2) Yoga classes (Mondays and Thursdays, 6 PM), 3) Art therapy workshops (Fridays, 4 PM), 4) Nature walks (Weekends, 10 AM), 5) Stress-relief events during exam periods. All activities are free and open to all students. Check the Activities Dashboard for the full schedule and to register.', 'CAMPUS_RESOURCES')
+ON CONFLICT (id) DO NOTHING;
+
+-- FAQ tags
+INSERT INTO faq_tags (id, faq_id, name) VALUES
+  (1, 1, 'extension'),
+  (2, 1, 'deadline'),
+  (3, 1, 'coursework'),
+  (4, 1, 'academic'),
+  (5, 2, 'anxiety'),
+  (6, 2, 'test'),
+  (7, 2, 'exam'),
+  (8, 2, 'stress'),
+  (9, 2, 'mental health'),
+  (10, 3, 'counseling'),
+  (11, 3, 'location'),
+  (12, 3, 'center'),
+  (13, 3, 'campus'),
+  (14, 4, 'probation'),
+  (15, 4, 'academic'),
+  (16, 4, 'gpa'),
+  (17, 4, 'support'),
+  (18, 5, 'deadline'),
+  (19, 5, 'late'),
+  (20, 5, 'extension'),
+  (21, 5, 'mental health'),
+  (22, 6, 'assignment'),
+  (23, 6, 'extension'),
+  (24, 6, 'deadline'),
+  (25, 6, 'request'),
+  (26, 7, 'search'),
+  (27, 7, 'filter'),
+  (28, 7, 'help'),
+  (29, 7, 'navigation'),
+  (30, 8, 'homesickness'),
+  (31, 8, 'mental health'),
+  (32, 8, 'coping'),
+  (33, 8, 'support'),
+  (34, 9, 'mental health'),
+  (35, 9, 'counseling'),
+  (36, 9, 'resources'),
+  (37, 9, 'therapy'),
+  (38, 10, 'study skills'),
+  (39, 10, 'workshop'),
+  (40, 10, 'time management'),
+  (41, 10, 'academic'),
+  (42, 11, 'crisis'),
+  (43, 11, 'emergency'),
+  (44, 11, 'mental health'),
+  (45, 11, 'support'),
+  (46, 11, 'urgent'),
+  (47, 12, 'wellness'),
+  (48, 12, 'activities'),
+  (49, 12, 'events'),
+  (50, 12, 'meditation'),
+  (51, 12, 'yoga')
+ON CONFLICT (id) DO NOTHING;
+
 -- Reset sequences for clean auto-increment
 SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users));
+SELECT setval('faqs_id_seq', (SELECT COALESCE(MAX(id), 1) FROM faqs));
+SELECT setval('faq_tags_id_seq', (SELECT COALESCE(MAX(id), 1) FROM faq_tags));
 SELECT setval('support_threads_id_seq', (SELECT COALESCE(MAX(id), 1) FROM support_threads));
 SELECT setval('messages_id_seq', (SELECT COALESCE(MAX(id), 1) FROM messages));
 SELECT setval('counsellor_rotas_id_seq', (SELECT COALESCE(MAX(id), 1) FROM counsellor_rotas));

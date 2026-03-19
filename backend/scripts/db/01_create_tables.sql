@@ -1,5 +1,5 @@
 -- Table creation only. Run against an existing database (e.g. student_mental_support).
--- Order: users -> support_threads, counsellor_rotas, activities -> messages, bookings (FK dependencies).
+-- Order: users, faqs -> support_threads, counsellor_rotas, activities -> messages, faq_tags, bookings (FK dependencies).
 
 CREATE TABLE IF NOT EXISTS users (
   id         BIGSERIAL    PRIMARY KEY,
@@ -10,6 +10,21 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS faqs (
+  id         BIGSERIAL    PRIMARY KEY,
+  question   VARCHAR(255) NOT NULL,
+  preview    TEXT         NOT NULL,
+  answer     TEXT         NOT NULL,
+  category   VARCHAR(50)  NOT NULL CHECK (category IN ('ACADEMIC_STRESS', 'MENTAL_HEALTH', 'CAMPUS_RESOURCES')),
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_faqs_category
+  ON faqs (category);
+CREATE INDEX IF NOT EXISTS idx_faqs_updated
+  ON faqs (updated_at DESC);
 
 CREATE TABLE IF NOT EXISTS support_threads (
   id         BIGSERIAL    PRIMARY KEY,
@@ -38,6 +53,18 @@ CREATE TABLE IF NOT EXISTS messages (
 
 CREATE INDEX IF NOT EXISTS idx_messages_thread_created
   ON messages (thread_id, created_at);
+
+CREATE TABLE IF NOT EXISTS faq_tags (
+  id         BIGSERIAL    PRIMARY KEY,
+  faq_id     BIGINT       NOT NULL REFERENCES faqs(id) ON DELETE CASCADE,
+  name       VARCHAR(100) NOT NULL,
+  UNIQUE (faq_id, name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_faq_tags_faq
+  ON faq_tags (faq_id);
+CREATE INDEX IF NOT EXISTS idx_faq_tags_name
+  ON faq_tags (name);
 
 -- CounsellorRota: counsellor availability by day and time
 CREATE TABLE IF NOT EXISTS counsellor_rotas (
