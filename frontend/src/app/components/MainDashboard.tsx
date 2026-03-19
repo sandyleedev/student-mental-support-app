@@ -19,6 +19,7 @@ import { StudentBooking } from "./BookingEvent.tsx";
 import { MyBookings } from "./BookingsManagement.tsx";
 import { CounselorChat } from "./CounselorChat.tsx";
 import { FAQForStudent } from "./FAQForStudent.tsx";
+import { FAQManagement } from "./FAQManagement.tsx";
 import { CounselorDashboard } from "./RequestDashboard.tsx";
 import { TeamRota } from "./SessionManagement.tsx";
 import { StudentChat } from "./StudentChat.tsx";
@@ -32,7 +33,7 @@ type StudentView =
   | "booking"
   | "my-bookings"
   | "FAQ";
-type TeamView = "queue" | "chats" | "activities" | "rota";
+type TeamView = "queue" | "chats" | "activities" | "rota" | "FAQ";
 
 export function MainDashboard() {
   const [email, setEmail] = useState("emily@test.com");
@@ -163,6 +164,9 @@ export function MainDashboard() {
             userRole="counselor"
           />
         );
+      }
+      if (teamView === "FAQ") {
+        return <FAQManagement />;
       }
       return (
         <CounselorDashboard
@@ -401,6 +405,16 @@ export function MainDashboard() {
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${teamView === "rota" ? "bg-green-50 text-green-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
                   >
                     <Clock className="w-5 h-5" /> Counselling sessions
+                  </button>
+                  <button
+                    onClick={() => setTeamView("FAQ")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                      teamView === "FAQ"
+                        ? "bg-green-50 text-green-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Search className="w-5 h-5" /> FAQ
                   </button>
                 </div>
               </>
