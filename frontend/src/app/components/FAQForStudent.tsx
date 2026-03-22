@@ -1,4 +1,4 @@
-import { AlertCircle, BookOpen, Heart, Search } from "lucide-react";
+import { AlertCircle, BookOpen, Heart, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface FAQItem {
@@ -148,7 +148,7 @@ const MOCK_FAQ_DATA: FAQItem[] = [
 export function FAQForStudent({ onNavigateToSupport }: FAQProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
+  const [selectedFAQ, setSelectedFAQ] = useState<FAQItem | null>(null);
   const [faqData, setFaqData] = useState<FAQItem[]>(MOCK_FAQ_DATA);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -195,12 +195,16 @@ export function FAQForStudent({ onNavigateToSupport }: FAQProps) {
     return matchesCategory && matchesSearch;
   });
 
-  const handleFAQClick = (id: string) => {
-    setExpandedFAQ(expandedFAQ === id ? null : id);
+  const handleFAQClick = (faq: FAQItem) => {
+    setSelectedFAQ(faq);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedFAQ(null);
   };
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -236,7 +240,7 @@ export function FAQForStudent({ onNavigateToSupport }: FAQProps) {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-200 ${
                   selectedCategory === category.id
-                    ? "bg-linear-to-r from-blue-500 to-green-500 text-white shadow-md"
+                    ? "bg-blue-500 text-white shadow-md"
                     : "bg-white text-gray-700 border border-gray-200 hover:border-blue-300 hover:bg-blue-50"
                 }`}
               >
@@ -265,26 +269,19 @@ export function FAQForStudent({ onNavigateToSupport }: FAQProps) {
             <p className="text-gray-600">Loading FAQs...</p>
           </div>
         ) : filteredFAQs.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredFAQs.map((faq) => (
               <button
                 key={faq.id}
-                onClick={() => handleFAQClick(faq.id)}
-                className="bg-linear-to-br from-blue-50 via-green-50 to-gray-50 rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-200 transition-all duration-200 text-left group"
+                onClick={() => handleFAQClick(faq)}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-200 transition-all duration-200 text-left group cursor-pointer"
               >
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
                   {faq.question}
                 </h3>
                 <p className="text-sm text-gray-600 line-clamp-3">
-                  {expandedFAQ === faq.id ? faq.fullAnswer : faq.preview}
+                  {faq.preview}
                 </p>
-                {expandedFAQ === faq.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <span className="text-xs font-medium text-blue-600">
-                      Click to collapse
-                    </span>
-                  </div>
-                )}
               </button>
             ))}
           </div>
@@ -309,10 +306,9 @@ export function FAQForStudent({ onNavigateToSupport }: FAQProps) {
 
               <button
                 onClick={() => {
-                  // This would navigate to support request form
                   onNavigateToSupport?.();
                 }}
-                className="px-8 py-3 bg-linear-to-r from-blue-500 to-green-500 text-white rounded-2xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                className="px-8 py-3 bg-blue-500 text-white rounded-2xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               >
                 Open New Support Request
               </button>
@@ -320,6 +316,100 @@ export function FAQForStudent({ onNavigateToSupport }: FAQProps) {
           </div>
         )}
       </div>
+
+      {/* Modal Backdrop */}
+      {selectedFAQ && (
+        <div
+          className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
+          onClick={handleCloseModal}
+        >
+          {/* Modal Card */}
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between p-8 border-b border-gray-200 sticky top-0 bg-white">
+              <div className="flex-1 pr-4">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  {selectedFAQ.question}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                    {selectedFAQ.category}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-8">
+              <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {selectedFAQ.fullAnswer}
+              </div>
+
+              {/* Tags */}
+              {selectedFAQ.tags.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <p className="text-sm font-medium text-gray-600 mb-3">
+                    Related topics:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedFAQ.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-8 border-t border-gray-200 bg-gray-50 flex justify-end"></div>
+          </div>
+        </div>
+      )}
+
+      {/* Animations */}
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slide-up {
+          from {
+            transform: translateY(20px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
