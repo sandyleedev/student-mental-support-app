@@ -75,10 +75,10 @@ INSERT INTO messages (id, thread_id, sender_id, content) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- Counsellor rotas: Mon-Fri 9am-5pm only (8 slots per day: 9:00–16:00)
-\i scripts/db/_rotas_gen.sql
+\i backend/scripts/db/_rotas_gen.sql
 
 -- SESSION activities: Mar/Apr/May 2026 weekdays, 3 slots/day UK 9am-5pm, 1 counsellor per day (Mon=Sarah, Tue=James, Wed=Emily, Thu=David, Fri=Emily)
-\i scripts/db/_sessions_gen.sql
+\i backend/scripts/db/_sessions_gen.sql
 
 -- WORKSHOP activities: 4 counsellors (3, 4, 5, 6) – ids 781+ to avoid conflict with SESSION ids 1-780
 INSERT INTO activities (id, type, title, start_time, duration_min, capacity, facilitator_id, location) VALUES
