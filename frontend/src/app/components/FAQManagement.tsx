@@ -63,34 +63,43 @@ const MOCK_FAQ_DATA: FAQItem[] = [
   },
 ];
 
-// TODO: Create API service functions
-// Example:
-// async function fetchFAQs(): Promise<FAQItem[]> {
-//   const response = await fetch('/api/faqs');
-//   return response.json();
-// }
-//
-// async function createFAQ(faq: Omit<FAQItem, 'id' | 'createdDate' | 'lastModified'>): Promise<FAQItem> {
-//   const response = await fetch('/api/faqs', {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify(faq),
-//   });
-//   return response.json();
-// }
-//
-// async function updateFAQ(id: string, faq: Partial<FAQItem>): Promise<FAQItem> {
-//   const response = await fetch(`/api/faqs/${id}`, {
-//     method: 'PUT',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify(faq),
-//   });
-//   return response.json();
-// }
-//
-// async function deleteFAQ(id: string): Promise<void> {
-//   await fetch(`/api/faqs/${id}`, { method: 'DELETE' });
-// }
+const API_BASE_URL = "http://localhost:5001";
+
+async function fetchFAQs(): Promise<FAQItem[]> {
+  const response = await fetch(`${API_BASE_URL}/api/faqs`);
+  if (!response.ok) throw new Error("Failed to fetch FAQs");
+  const data = await response.json();
+  return Array.isArray(data) ? data : data.faqs || [];
+}
+
+async function createFAQ(
+  faq: Omit<FAQItem, "id" | "createdDate" | "lastModified">,
+): Promise<FAQItem> {
+  const response = await fetch(`${API_BASE_URL}/api/faqs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(faq),
+  });
+  if (!response.ok) throw new Error("Failed to create FAQ");
+  return response.json();
+}
+
+async function updateFAQ(id: string, faq: Partial<FAQItem>): Promise<FAQItem> {
+  const response = await fetch(`${API_BASE_URL}/api/faqs/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(faq),
+  });
+  if (!response.ok) throw new Error("Failed to update FAQ");
+  return response.json();
+}
+
+async function deleteFAQ(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/faqs/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete FAQ");
+}
 
 export function FAQManagement() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,20 +109,14 @@ export function FAQManagement() {
   const [faqList, setFaqList] = useState<FAQItem[]>(MOCK_FAQ_DATA);
   const [isLoading, setIsLoading] = useState(false);
 
-  // TODO: Replace with actual API call
   useEffect(() => {
     const loadFAQs = async () => {
       setIsLoading(true);
       try {
-        // TODO: Uncomment when API is ready
-        // const data = await fetchFAQs();
-        // setFaqList(data);
-
-        // Using mock data for now
-        setFaqList(MOCK_FAQ_DATA);
+        const data = await fetchFAQs();
+        setFaqList(data);
       } catch (error) {
         console.error("Failed to load FAQs:", error);
-        setFaqList(MOCK_FAQ_DATA);
       } finally {
         setIsLoading(false);
       }
@@ -172,24 +175,17 @@ export function FAQManagement() {
   });
 
   const handleAddFAQ = async () => {
-    const newFAQ: FAQItem = {
-      id: crypto.randomUUID(),
+    const newFAQ = {
       question: formData.question,
       preview: formData.preview,
       fullAnswer: formData.fullAnswer,
       category: formData.category,
       tags: formData.tags.split(",").map((tag) => tag.trim()),
-      createdDate: new Date().toISOString().split("T")[0],
-      lastModified: new Date().toISOString().split("T")[0],
     };
 
     try {
-      // TODO: Uncomment when API is ready
-      // const savedFAQ = await createFAQ(newFAQ);
-      // setFaqList([...faqList, savedFAQ]);
-
-      // Using local state for now
-      setFaqList([...faqList, newFAQ]);
+      const savedFAQ = await createFAQ(newFAQ);
+      setFaqList([...faqList, savedFAQ]);
       setShowAddModal(false);
       resetForm();
     } catch (error) {
@@ -201,23 +197,19 @@ export function FAQManagement() {
     if (!editingFAQ) return;
 
     const updatedFAQ = {
-      ...editingFAQ,
       question: formData.question,
       preview: formData.preview,
       fullAnswer: formData.fullAnswer,
       category: formData.category,
       tags: formData.tags.split(",").map((tag) => tag.trim()),
-      lastModified: new Date().toISOString().split("T")[0],
     };
 
     try {
-      // TODO: Uncomment when API is ready
-      // await updateFAQ(editingFAQ.id, updatedFAQ);
-      // setFaqList(faqList.map((faq) => (faq.id === editingFAQ.id ? updatedFAQ : faq)));
-
-      // Using local state for now
+      await updateFAQ(editingFAQ.id, updatedFAQ);
       setFaqList(
-        faqList.map((faq) => (faq.id === editingFAQ.id ? updatedFAQ : faq)),
+        faqList.map((faq) =>
+          faq.id === editingFAQ.id ? { ...faq, ...updatedFAQ } : faq,
+        ),
       );
       setEditingFAQ(null);
       resetForm();
@@ -233,11 +225,7 @@ export function FAQManagement() {
       )
     ) {
       try {
-        // TODO: Uncomment when API is ready
-        // await deleteFAQ(id);
-        // setFaqList(faqList.filter((faq) => faq.id !== id));
-
-        // Using local state for now
+        await deleteFAQ(id);
         setFaqList(faqList.filter((faq) => faq.id !== id));
       } catch (error) {
         console.error("Failed to delete FAQ:", error);

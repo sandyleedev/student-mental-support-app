@@ -138,12 +138,14 @@ const MOCK_FAQ_DATA: FAQItem[] = [
   },
 ];
 
-// TODO: Create API service function
-// Example:
-// async function fetchFAQs(): Promise<FAQItem[]> {
-//   const response = await fetch('/api/faqs');
-//   return response.json();
-// }
+const API_BASE_URL = "http://localhost:5001";
+
+async function fetchFAQs(): Promise<FAQItem[]> {
+  const response = await fetch(`${API_BASE_URL}/api/faqs`);
+  if (!response.ok) throw new Error("Failed to fetch FAQs");
+  const data = await response.json();
+  return Array.isArray(data) ? data : data.faqs || [];
+}
 
 export function FAQForStudent({ onNavigateToSupport }: FAQProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,20 +154,14 @@ export function FAQForStudent({ onNavigateToSupport }: FAQProps) {
   const [faqData, setFaqData] = useState<FAQItem[]>(MOCK_FAQ_DATA);
   const [isLoading, setIsLoading] = useState(false);
 
-  // TODO: Replace with actual API call
   useEffect(() => {
     const loadFAQs = async () => {
       setIsLoading(true);
       try {
-        // TODO: Uncomment when API is ready
-        // const data = await fetchFAQs();
-        // setFaqData(data);
-
-        // Using mock data for now
-        setFaqData(MOCK_FAQ_DATA);
+        const data = await fetchFAQs();
+        setFaqData(data);
       } catch (error) {
         console.error("Failed to load FAQs:", error);
-        setFaqData(MOCK_FAQ_DATA);
       } finally {
         setIsLoading(false);
       }
