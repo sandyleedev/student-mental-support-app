@@ -117,7 +117,7 @@ def _validate_activity_fields(type_val, duration_min, capacity, facilitator_id, 
     return facilitator
 
 
-def _activity_to_dict(activity, include_participants=False, include_student_name=False):
+def _activity_to_dict(activity, include_participants=False):
     """Serialize Activity to frontend-friendly dict.
     Matches: StudentBooking (TimeSlot/WorkshopEvent), TeamRota, WellbeingDashboard.
     """
@@ -143,9 +143,17 @@ def _activity_to_dict(activity, include_participants=False, include_student_name
         "start_time": activity.start_time.isoformat() if activity.start_time else None,
     }
 
-    if include_student_name and activity.type == "SESSION":
+    if include_participants and activity.type == "SESSION":
         confirmed = Booking.query.filter_by(activity_id=activity.id, status="CONFIRMED").first()
-        out["studentName"] = confirmed.student.name if confirmed and confirmed.student else None
+        out["participants"] = (
+            [{
+                "id": str(confirmed.student.id),
+                "name": confirmed.student.name,
+                "email": getattr(confirmed.student, "email", "") or "",
+            }]
+            if confirmed and confirmed.student
+            else []
+        )
 
     if include_participants and activity.type == "WORKSHOP":
         participants = []
@@ -222,11 +230,10 @@ def list_activities():
             query = query.filter_by(facilitator_id=userId)
 
     activities = query.order_by(Activity.start_time.asc()).all()
-    include_student = type_val == "SESSION"
-    include_participants = type_val == "WORKSHOP"
+    include_participants = True
     return jsonify({
         "activities": [
-            _activity_to_dict(a, include_participants=include_participants, include_student_name=include_student)
+            _activity_to_dict(a, include_participants=include_participants)
             for a in activities
         ]
     }), 200
@@ -332,8 +339,7 @@ def create_activity():
     return jsonify(
         _activity_to_dict(
             activity,
-            include_participants=activity.type == "WORKSHOP",
-            include_student_name=activity.type == "SESSION",
+            include_participants=True,
         )
     ), 201
 
@@ -358,12 +364,9 @@ def get_activity(activity_id):
     activity = Activity.query.get(activity_id)
     if not activity:
         return jsonify({"error": "Activity not found"}), 404
-    include_participants = activity.type == "WORKSHOP"
-    include_student = activity.type == "SESSION"
     return jsonify(_activity_to_dict(
         activity,
-        include_participants=include_participants,
-        include_student_name=include_student,
+        include_participants=True,
     )), 200
 
 
@@ -478,8 +481,7 @@ def update_activity(activity_id):
     return jsonify(
         _activity_to_dict(
             activity,
-            include_participants=activity.type == "WORKSHOP",
-            include_student_name=activity.type == "SESSION",
+            include_participants=True,
         )
     ), 200
 

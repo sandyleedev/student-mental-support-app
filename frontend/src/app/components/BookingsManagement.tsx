@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AlertCircle,
   Calendar,
@@ -20,97 +21,113 @@ export type Booking = {
   status: "upcoming" | "completed" | "cancelled";
 };
 
-// --- Mock Data ---
-const MOCK_BOOKINGS: Booking[] = [
-  {
-    id: "1",
-    title: "Academic Support Session",
-    type: "session",
-    date: "2026-03-16",
-    time: "14:00",
-    duration: "60 min",
-    location: "Counseling Center, Room 203",
-    facilitator: "Dr. Sarah Mitchell",
-    status: "upcoming",
-  },
-  {
-    id: "2",
-    title: "Mindfulness & Meditation Workshop",
-    type: "workshop",
-    date: "2026-03-18",
-    time: "10:00",
-    duration: "90 min",
-    location: "Wellness Center, Main Hall",
-    facilitator: "Dr. James Chen",
-    status: "upcoming",
-  },
-  {
-    id: "3",
-    title: "Career Planning Session",
-    type: "session",
-    date: "2026-03-01",
-    time: "09:00",
-    duration: "45 min",
-    location: "Counseling Center, Room 101",
-    facilitator: "Ms. Emily Rodriguez",
-    status: "completed",
-  },
-];
+const API_BASE = "http://localhost:5001/api";
 
 interface MyBookingsProps {
-  onBookNew?: () => void; // Optional prop to navigate back to the booking page
+  onBookNew?: () => void;
 }
 
 export function MyBookings({ onBookNew }: MyBookingsProps) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Modal & Action States
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // --- 1. [API Placeholder] Fetch User's Bookings ---
+  const studentId = localStorage.getItem("user_id") || "2";
+
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         setIsLoading(true);
-        // Simulate network delay
-        await new Promise((resolve) => setTimeout(resolve, 600));
+        const response = await fetch(
+          `${API_BASE}/bookings?userId=${studentId}`,
+        );
 
-        // TODO: Replace with real GET request
-        // const userId = localStorage.getItem('user_id');
-        // const response = await fetch(`http://localhost:5001/api/users/${userId}/bookings`);
-        // const data = await response.json();
-        // setBookings(data);
+        if (response.ok) {
+          const data = await response.json();
+          const fetchedBookings =
+            data.bookings || (Array.isArray(data) ? data : []);
 
-        setBookings(MOCK_BOOKINGS);
+          const mappedBookings: Booking[] = fetchedBookings.map((b: any) => {
+            const dateStr =
+              b.date || (b.start_time ? b.start_time.split("T")[0] : "");
+            const timeStr =
+              b.time ||
+              (b.start_time ? b.start_time.split("T")[1].substring(0, 5) : "");
+
+            let mappedStatus: Booking["status"] = "upcoming";
+            const backendStatus = String(b.status || "").toUpperCase();
+
+            if (backendStatus === "CANCELLED") {
+              mappedStatus = "cancelled";
+            } else {
+              const bookingDateTime = new Date(`${dateStr}T${timeStr}`);
+              if (bookingDateTime < new Date()) {
+                mappedStatus = "completed";
+              }
+            }
+
+            return {
+              id: String(b.id || b.booking_id),
+              title:
+                b.title ||
+                b.activity?.title ||
+                (b.type === "workshop" ? "Team Workshop" : "1-on-1 Counseling"),
+              type: (b.type || b.activity?.type || "session").toLowerCase() as
+                | "session"
+                | "workshop",
+              date: dateStr,
+              time: timeStr,
+              duration: b.duration || b.activity?.duration || "50 min",
+              location: b.location || b.activity?.location || "Online / TBA",
+              facilitator:
+                b.facilitator ||
+                b.activity?.facilitator ||
+                b.counsellor_name ||
+                "Staff Member",
+              status: mappedStatus,
+            };
+          });
+
+          mappedBookings.sort(
+            (a, b) =>
+              new Date(`${a.date}T${a.time}`).getTime() -
+              new Date(`${b.date}T${b.time}`).getTime(),
+          );
+
+          setBookings(mappedBookings);
+        } else {
+          setBookings([]);
+        }
       } catch (error) {
         console.error("Failed to fetch bookings:", error);
+        setBookings([]);
       } finally {
         setIsLoading(false);
       }
     };
     fetchBookings();
-  }, []);
+  }, [studentId]);
 
-  // --- 2. [API Placeholder] Cancel Booking ---
   const handleConfirmCancel = async () => {
     if (!bookingToCancel) return;
     setIsCancelling(true);
 
     try {
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const response = await fetch(
+        `${API_BASE}/bookings/${bookingToCancel.id}/cancel`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
 
-      // TODO: Replace with real PUT/DELETE request
-      /*
-      const response = await fetch(`http://localhost:5001/api/bookings/${bookingToCancel.id}/cancel`, {
-        method: 'PUT' // or DELETE depending on backend spec
-      });
-      if (!response.ok) throw new Error('Failed to cancel');
-      */
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Failed to cancel");
+      }
 
-      // Update local state: change status to 'cancelled'
       setBookings((prev) =>
         prev.map((b) =>
           b.id === bookingToCancel.id ? { ...b, status: "cancelled" } : b,
@@ -118,9 +135,9 @@ export function MyBookings({ onBookNew }: MyBookingsProps) {
       );
 
       setBookingToCancel(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cancelling booking:", error);
-      alert("Failed to cancel the booking. Please try again.");
+      alert(`Failed to cancel the booking: ${error.message}`);
     } finally {
       setIsCancelling(false);
     }

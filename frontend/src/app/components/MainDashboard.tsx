@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Bell,
   Calendar,
@@ -5,49 +6,34 @@ import {
   ClipboardList,
   Clock,
   Heart,
+  HeartHandshake,
   Lock,
   LogOut,
   Mail,
   MessageCircle,
+  Search,
   Settings,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { StudentBooking } from "./BookingEvent.tsx";
+import { MyBookings } from "./BookingsManagement.tsx";
 import { CounselorChat } from "./CounselorChat.tsx";
-import { CounselorDashboard } from "./CounselorDashboard.tsx";
-import { MyBookings } from "./MyBookings.tsx";
-import { StudentBooking } from "./StudentBooking.tsx";
+import { FAQForStudent } from "./FAQForStudent.tsx";
+import { FAQManagement } from "./FAQManagement.tsx";
+import { CounselorDashboard } from "./RequestDashboard.tsx";
+import { TeamRota } from "./SessionManagement.tsx";
 import { StudentChat } from "./StudentChat.tsx";
 import { SupportRequestForm } from "./SupportRequestForm.tsx";
-import { TeamRota } from "./TeamRota.tsx";
-import { WellbeingDashboard } from "./WellbeingDashboard.tsx";
+import { WellbeingDashboard } from "./WorkshopManagement.tsx";
 
 type UserRole = "student" | "counselor";
-type StudentView = "request" | "conversations" | "booking" | "my-bookings";
-type TeamView = "queue" | "chats" | "activities" | "rota";
-
-const MOCK_USERS = [
-  {
-    id: 1,
-    role: "student",
-    name: "Rory Gilmore",
-    email: "rory@test.com",
-    password: "123456",
-  },
-  {
-    id: 2,
-    role: "student",
-    name: "Lane Kim",
-    email: "lane@test.com",
-    password: "123456",
-  },
-  {
-    id: 3,
-    role: "counselor",
-    name: "Emily Gilmore",
-    email: "emily@test.com",
-    password: "123456",
-  },
-];
+type StudentView =
+  | "request"
+  | "conversations"
+  | "booking"
+  | "my-bookings"
+  | "FAQ";
+type TeamView = "queue" | "chats" | "activities" | "rota" | "FAQ";
 
 export function MainDashboard() {
   const [email, setEmail] = useState("emily@test.com");
@@ -62,6 +48,20 @@ export function MainDashboard() {
     undefined,
   );
   const [teamView, setTeamView] = useState<TeamView>("queue");
+  const [users, setUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const [studentsRes, counselorsRes] = await Promise.all([
+        fetch("http://127.0.0.1:5001/api/users?role=STUDENT"),
+        fetch("http://127.0.0.1:5001/api/users?role=COUNSELOR"),
+      ]);
+      const students = (await studentsRes.json()).users || [];
+      const counselors = (await counselorsRes.json()).users || [];
+      setUsers([...students, ...counselors]);
+    };
+    fetchUsers();
+  }, []);
 
   const userName = localStorage.getItem("user_name") || "User";
   const userAvatar = userName
@@ -79,19 +79,28 @@ export function MainDashboard() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      const matchedUser = MOCK_USERS.find(
-        (user) => user.email === email && user.password === password,
+      const matchedUser = users.find(
+        (user) => user.email === email && "123456" === password,
       );
 
       if (matchedUser) {
         localStorage.setItem("user_id", matchedUser.id.toString());
-        localStorage.setItem("role", matchedUser.role);
+        localStorage.setItem(
+          "role",
+          matchedUser.role.toLowerCase() === "student"
+            ? "student"
+            : "counselor",
+        );
         localStorage.setItem("user_name", matchedUser.name);
 
-        setUserRole(matchedUser.role as UserRole);
+        setUserRole(
+          matchedUser.role.toLowerCase() === "student"
+            ? "student"
+            : "counselor",
+        );
         setIsLoggedIn(true);
 
-        if (matchedUser.role === "student") {
+        if (matchedUser.role.toLowerCase() === "student") {
           setStudentView("request");
         } else {
           setTeamView("queue");
@@ -127,6 +136,13 @@ export function MainDashboard() {
       if (studentView === "conversations") {
         return <StudentChat />;
       }
+      if (studentView === "FAQ") {
+        return (
+          <FAQForStudent
+            onNavigateToSupport={() => setStudentView("request")}
+          />
+        );
+      }
       return <SupportRequestForm />;
     }
 
@@ -148,6 +164,9 @@ export function MainDashboard() {
             userRole="counselor"
           />
         );
+      }
+      if (teamView === "FAQ") {
+        return <FAQManagement />;
       }
       return (
         <CounselorDashboard
@@ -250,7 +269,7 @@ export function MainDashboard() {
 
             <div className="px-4 py-1.5 bg-gray-100 rounded-full text-sm font-medium text-gray-600 flex items-center gap-2">
               <span
-                className={`w-2 h-2 rounded-full ${userRole === "student" ? "bg-blue-500" : "bg-green-500"}`}
+                className={`w-2 h-2 rounded-full ${userRole === "student" ? "bg-green-500" : "bg-green-500"}`}
               />
               {userRole === "student" ? "Student Portal" : "Staff Portal"}
             </div>
@@ -264,7 +283,7 @@ export function MainDashboard() {
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center gap-2 pl-2 py-1 hover:bg-gray-100 rounded-lg"
                 >
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
+                  <div className="w-8 h-8 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs">
                     {userAvatar}
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -301,7 +320,7 @@ export function MainDashboard() {
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  <ClipboardList className="w-5 h-5" /> New Request
+                  <HeartHandshake className="w-5 h-5" /> New Request
                 </button>
                 <button
                   onClick={() => setStudentView("conversations")}
@@ -332,6 +351,16 @@ export function MainDashboard() {
                   }`}
                 >
                   <ClipboardList className="w-5 h-5" /> My Bookings
+                </button>
+                <button
+                  onClick={() => setStudentView("FAQ")}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    studentView === "FAQ"
+                      ? "bg-blue-50 text-blue-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <Search className="w-5 h-5" /> FAQ
                 </button>
               </>
             ) : (
@@ -369,13 +398,23 @@ export function MainDashboard() {
                         : "text-gray-600 hover:bg-gray-50"
                     }`}
                   >
-                    <Calendar className="w-5 h-5" /> Activities
+                    <Calendar className="w-5 h-5" /> Workshop
                   </button>
                   <button
                     onClick={() => setTeamView("rota")}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${teamView === "rota" ? "bg-green-50 text-green-700 font-medium" : "text-gray-600 hover:bg-gray-50"}`}
                   >
-                    <Clock className="w-5 h-5" /> My Rota
+                    <Clock className="w-5 h-5" /> Counselling sessions
+                  </button>
+                  <button
+                    onClick={() => setTeamView("FAQ")}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                      teamView === "FAQ"
+                        ? "bg-green-50 text-green-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Search className="w-5 h-5" /> FAQ
                   </button>
                 </div>
               </>
