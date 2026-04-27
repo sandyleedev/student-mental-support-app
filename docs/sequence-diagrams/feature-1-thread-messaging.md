@@ -27,7 +27,7 @@ sequenceDiagram
         Counsellor->>+threadView: Send message
         threadView->>+threadHandler: submitMessage(threadId, userId, role, body)
         threadHandler->>+threadRepository: getThreadById(threadId)
-        Note right of threadRepository: No per-thread ownership check; COUNSELLOR can reply to any thread
+        Note right of threadRepository: No per-thread ownership check. COUNSELLOR can reply to any thread
         threadRepository-->>-threadHandler: Thread or not found
         threadHandler->>+messageRepository: saveMessage(threadId, senderId, body)
         messageRepository-->>-threadHandler: Persisted message
