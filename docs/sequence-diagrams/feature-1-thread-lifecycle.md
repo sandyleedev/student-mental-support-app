@@ -1,48 +1,72 @@
 # Support thread lifecycle
 
-This diagram combines the main thread management flows into one high-level view: starting a support request, browsing threads, and opening a conversation.
+The support thread lifecycle: a client-side urgency check-in precedes thread creation, where high urgency triggers crisis-style guidance before submission. The student then submits a topic and initial message, and the backend creates a thread with an associated urgency level. After creation, access is role-based: students may view and open only their own threads, while counsellors may access all threads.
 
 ```mermaid
 sequenceDiagram
-    participant User
+    participant Student
+    participant Counsellor
+    participant screeningView as ":UrgencyScreeningView"
+    participant supportView as ":SupportRequestView"
     participant threadView as ":ThreadView"
     participant threadHandler as ":ThreadHandler"
     participant threadRepository as ":ThreadRepository"
 
-    %% Flow 1 - Start a support request
-    User->>+threadView: Submit topic, urgency level, and first message
-    threadView->>+threadHandler: Create thread
-    threadHandler->>+threadRepository: Save thread, urgency level, and first message
-    threadRepository-->>-threadHandler: Created thread
-    threadHandler-->>-threadView: Return new thread
-    threadView-->>-User: Show created conversation
-
-    %% Flow 2 - Browse support threads
-    User->>+threadView: Open thread list
-    threadView->>+threadHandler: Request available threads
-    alt student
-        threadHandler->>+threadRepository: Load the student's thread list
-        threadRepository-->>-threadHandler: Student threads
-    else counsellor
-        threadHandler->>+threadRepository: Load all students' threads
-        threadRepository-->>-threadHandler: All threads
+    Student->>+screeningView: Complete questions, submit
+    alt Highest concern
+        screeningView-->>Student: Show crisis support numbers and next steps
+        Student->>screeningView: Continue to the support request
+    else Medium or lower concern
+        Note over screeningView: Go to the support request
     end
-    threadHandler-->>-threadView: Return thread list
-    threadView-->>-User: Show thread list
+    screeningView-->>supportView: Pass the urgency into the form step
+    Student->>+supportView: Add topic, message, send
+    supportView->>+threadHandler: createThread(studentId, payload)
+    threadHandler->>+threadRepository: saveNewThreadForStudent(studentId, topic, urgency, firstMessage)
+    threadRepository-->>-threadHandler: created thread
+    threadHandler-->>-supportView: return new thread
+    supportView-->>-Student: show created conversation or confirmation
 
-    %% Flow 3 - Open a conversation
-    User->>+threadView: Select a thread
-    threadView->>+threadHandler: Request thread details
-    threadHandler->>+threadRepository: Load thread and messages
-    threadRepository-->>-threadHandler: Conversation data
-    threadHandler-->>-threadView: Return conversation
-    threadView-->>-User: Show thread details
+    alt Student lists own threads
+        Student->>+threadView: Open thread list
+        Note over Student, threadView: Own threads only
+        threadView->>+threadHandler: getOwnThreads(studentId)
+        threadHandler->>+threadRepository: findThreadsByStudentId(studentId)
+        threadRepository-->>-threadHandler: Threads for that student only
+        threadHandler-->>-threadView: Return own thread list
+        threadView-->>-Student: Show thread list
+    else Counsellor lists all threads
+        Counsellor->>+threadView: Open thread list
+        Note over Counsellor, threadView: All threads
+        threadView->>+threadHandler: getAllThreads()
+        threadHandler->>+threadRepository: findAllThreads()
+        threadRepository-->>-threadHandler: All students' threads
+        threadHandler-->>-threadView: Return full thread list
+        threadView-->>-Counsellor: Show thread list
+    end
+
+    alt Student opens a thread
+        Student->>+threadView: Select thread
+        threadView->>+threadHandler: getThreadForStudent(studentId, threadId)
+        threadHandler->>+threadRepository: findThreadByIdAndStudentId(threadId, studentId)
+        threadRepository-->>-threadHandler: Thread and messages (or not found if not owned)
+        threadHandler-->>-threadView: Conversation data
+        threadView-->>-Student: Show thread details
+    else Counsellor opens a thread
+        Counsellor->>+threadView: Select thread
+        threadView->>+threadHandler: getThreadForCounsellor(threadId)
+        threadHandler->>+threadRepository: findThreadByIdWithMessages(threadId)
+        threadRepository-->>-threadHandler: Thread and messages
+        threadHandler-->>-threadView: Conversation data
+        threadView-->>-Counsellor: Show thread details
+    end
 ```
 
 ## Covered flows
 
-| Flow | What it shows |
-|------|----------------|
-| Start a support request | A student creates a thread with a selected urgency level, and the first message is stored as part of the new conversation. |
-| Browse threads | The system returns the relevant thread list for the current user view. |
-| Open a conversation | The client loads the selected thread together with its message history. |
+| Flow                     | What it shows                                                                                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Check-in and new request | A short check-in; optional crisis information at the **highest** level; then **createThread** / **saveNewThreadForStudent** with topic, urgency, and first message. |
+| Browse threads           | **getOwnThreads** for a student; **getAllThreads** for a counsellor.                                                                                                |
+| Open a conversation      | **getThreadForStudent** scopes by `studentId`; **getThreadForCounsellor** loads by thread id.                                                                       |
+| Team visibility          | After a case exists, the team **sees urgency** in the list or chat when they work the app; **no** automatic text or email from the check-in flow.                   |

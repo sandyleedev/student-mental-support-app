@@ -1,43 +1,49 @@
-# Activity management lifecycle
+# Booking flow (counsellor-published activities / slots)
 
-This diagram combines the main activity management flows into one high-level view: browsing activities, creating or updating an activity, and removing an activity.
+Counselling activities in the system represent bookable slots (e.g. sessions or workshops with capacity), and bookings link a student to an activity. This diagram focuses on the booking flow, showing how counsellors publish availability and how students discover and confirm bookings.
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant activityView as ":ActivityView"
+    participant Counsellor
+    participant Student
+    participant counsellorActivityView as ":CounsellorActivityView"
+    participant studentBookingView as ":StudentBookingView"
     participant activityHandler as ":ActivityHandler"
+    participant bookingHandler as ":BookingHandler"
     participant activityRepository as ":ActivityRepository"
+    participant bookingRepository as ":BookingRepository"
 
-    %% Flow 1 - Browse activities
-    User->>+activityView: Open activity dashboard
-    activityView->>+activityHandler: Request activities
-    activityHandler->>+activityRepository: Load activities
-    activityRepository-->>-activityHandler: Activity list
-    activityHandler-->>-activityView: Return activities
-    activityView-->>-User: Show activity list
+    %% a–b Counsellor creates available slots (activities)
+    Counsellor->>+counsellorActivityView: Define session/workshop (time, capacity, title, …)
+    counsellorActivityView->>+activityHandler: createActivity(counsellorId, activityDetails)
+    activityHandler->>+activityRepository: saveActivity(activityDetails)
+    activityRepository-->>-activityHandler: Saved activity (available slot)
+    activityHandler-->>-counsellorActivityView: Return published activity
+    counsellorActivityView-->>-Counsellor: Confirm slot listed
 
-    %% Flow 2 - Create or update an activity
-    User->>+activityView: Create or edit an activity
-    activityView->>+activityHandler: Submit activity details
-    activityHandler->>+activityRepository: Save activity changes
-    activityRepository-->>-activityHandler: Updated activity
-    activityHandler-->>-activityView: Return updated activity
-    activityView-->>-User: Show updated activity
+    %% c Student retrieves available slots
+    Student->>+studentBookingView: Open booking / sessions page
+    studentBookingView->>+activityHandler: getAvailableActivities(filters)
+    activityHandler->>+activityRepository: findUpcomingActivitiesWithCapacity()
+    activityRepository-->>-activityHandler: Activities with remaining capacity
+    activityHandler-->>-studentBookingView: Return slot list
+    studentBookingView-->>-Student: Show available slots
 
-    %% Flow 3 - Remove an activity
-    User->>+activityView: Delete an activity
-    activityView->>+activityHandler: Remove activity
-    activityHandler->>+activityRepository: Delete activity
-    activityRepository-->>-activityHandler: Activity removed
-    activityHandler-->>-activityView: Return removal result
-    activityView-->>-User: Update activity list
+    %% d–e Student selects slot and booking is confirmed
+    Student->>+studentBookingView: Select activity and confirm booking
+    studentBookingView->>+bookingHandler: createConfirmedBooking(studentId, activityId)
+    bookingHandler->>+activityRepository: findActivityForUpdate(activityId)
+    activityRepository-->>-bookingHandler: Activity (capacity, type)
+    bookingHandler->>+bookingRepository: saveBookingIfCapacityAllows(studentId, activityId, CONFIRMED)
+    bookingRepository-->>-bookingHandler: Confirmed booking (or conflict / full)
+    bookingHandler-->>-studentBookingView: Booking result
+    studentBookingView-->>-Student: Show confirmation
 ```
 
 ## Covered flows
 
-| Flow | What it shows |
-|------|----------------|
-| Browse activities | The user opens the activity dashboard and reviews the current list of activities. |
-| Create or update an activity | The user adds a new activity or edits an existing one, and the system saves the latest activity details. |
-| Remove an activity | The user removes an activity and the dashboard reflects the updated list. |
+| Step            | What it shows                                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Publish slots   | **Counsellor** (or facilitator) creates an **activity**; **ActivityRepository** persists it as an available bookable slot. |
+| Discover slots  | **Student** loads upcoming activities that still have **capacity**.                                                        |
+| Confirm booking | **BookingHandler** validates capacity and persists a **CONFIRMED** row via **BookingRepository**.                          |
