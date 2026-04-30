@@ -4,7 +4,7 @@ Flask API server for the Student Mental Support App.
 
 ## Database
 
-See **[Local DB setup guide](../docs/db-setup.md)** for installing PostgreSQL (macOS/Windows), creating the database, running schema and seed scripts, and verification.
+See **[Local DB setup guide](../docs/db/db-setup.md)** for installing PostgreSQL (macOS/Windows), creating the database, running schema and seed scripts, and verification.
 
 ## Setup
 
@@ -25,15 +25,15 @@ Server: `http://localhost:5000` (default). Use `--host=0.0.0.0` only if you need
 
 ## Endpoints
 
-| Method | Path        | Description   |
-|--------|-------------|---------------|
-| GET    | /           | Root          |
-| GET    | /health     | Health check  |
-| GET    | /api/health | API health    |
+| Method | Path             | Description                                                                     |
+| ------ | ---------------- | ------------------------------------------------------------------------------- |
+| GET    | /                | Root                                                                            |
+| GET    | /health          | Health check                                                                    |
+| GET    | /api/health      | API health                                                                      |
 | GET    | /api/threads     | List threads (?user_id=, optional ?status=ALL\|WAITING\|REPLIED for counsellor) |
-| GET    | /api/threads/:id | Thread detail with messages (chronological) |
-| POST   | /api/threads     | Create support thread (student_id, topic) |
-| POST   | /api/test    | POST test (echo body) |
+| GET    | /api/threads/:id | Thread detail with messages (chronological)                                     |
+| POST   | /api/threads     | Create support thread (student_id, topic)                                       |
+| POST   | /api/test        | POST test (echo body)                                                           |
 
 ## Structure
 
