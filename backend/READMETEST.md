@@ -6,45 +6,27 @@ This test suite is written in **pytest** and follows the testing ideas from the 
 - **Boundary value analysis** for activity capacity and invalid query parameters
 - **System/API automation** for Flask endpoints rather than pure unit-only tests
 
-## Files
+## File
 
-- `backend/tests/conftest.py` — isolated Flask client and in-memory test database seed
-- `backend/tests/test_general.py` — health and users tests
-- `backend/tests/test_threads.py` — support thread lifecycle tests
-- `backend/tests/test_activities.py` — activities CRUD and validation tests
-- `backend/tests/test_bookings.py` — booking creation/cancellation tests
-- `backend/tests/test_rotas.py` — rota retrieval tests
-- `backend/requirements-test.txt` — test-only Python dependencies
-
-## How to use inside your backend project
-
-Put the files into this structure:
-
-```text
-backend/
-  requirements-test.txt
-  tests/
-    conftest.py
-    test_general.py
-    test_threads.py
-    test_activities.py
-    test_bookings.py
-    test_rotas.py
-```
+- `backend/test_all.py` - integrated API test suite using `pytest`
 
 ## Install and run
 
 ```bash
 cd backend
+# If virtualenv is not set up yet:
+python3 -m venv venv
+source venv/bin/activate   # Windows PowerShell: .\venv\Scripts\Activate.ps1
+
 pip install -r requirements.txt
-pip install -r requirements-test.txt
-pytest -v
+pip install pytest
+pytest -v test_all.py
 ```
 
 Run with coverage:
 
 ```bash
-pytest --cov=app --cov-report=term-missing
+pytest --cov=app --cov-report=term-missing test_all.py
 ```
 
 ## Notes

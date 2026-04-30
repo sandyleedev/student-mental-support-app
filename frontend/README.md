@@ -17,13 +17,10 @@ Make sure you have [Node.js](https://nodejs.org/) installed on your machine.
    npm install
    ```
 
-````
-
 2. Start the development server:
-```bash
-npm run dev
-
-````
+   ```bash
+   npm run dev
+   ```
 
 3. Open your browser and visit `http://localhost:5173` (or the port specified in your terminal).
 

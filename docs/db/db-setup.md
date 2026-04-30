@@ -101,8 +101,8 @@ psql -U postgres -d student_mental_support -f backend/scripts/db/01_create_table
 psql -U postgres -d student_mental_support -f backend/scripts/db/02_seed_data.sql
 ```
 
-- **01_create_tables.sql** – Creates `users`, `support_threads`, and `messages` tables and indexes. Safe to run multiple times.
-- **02_seed_data.sql** – Inserts demo users, threads, and messages and resets sequences. Safe to run multiple times.
+- **01_create_tables.sql** - Creates core tables (`users`, `faqs`, `support_threads`, `messages`, `faq_tags`, `counsellor_rotas`, `activities`, `bookings`) and indexes. Safe to run multiple times.
+- **02_seed_data.sql** - Inserts demo data across users/threads/messages/FAQs/rotas/activities/bookings and resets sequences. Safe to run multiple times.
 
 ---
 
@@ -122,17 +122,23 @@ In the `psql` prompt:
 -- List tables
 \dt
 
--- Expected: users, support_threads, messages
+-- Expected tables include:
+-- users, faqs, support_threads, messages, faq_tags,
+-- counsellor_rotas, activities, bookings
 
 -- Row counts
 SELECT 'users' AS table_name, COUNT(*) FROM users
 UNION ALL
 SELECT 'support_threads', COUNT(*) FROM support_threads
 UNION ALL
-SELECT 'messages', COUNT(*) FROM messages;
+SELECT 'messages', COUNT(*) FROM messages
+UNION ALL
+SELECT 'activities', COUNT(*) FROM activities
+UNION ALL
+SELECT 'bookings', COUNT(*) FROM bookings;
 ```
 
-You should see 3 users, 2 support_threads, and 11 messages. Exit with `\q`.
+Counts may change as seed data evolves. The important check is that each query returns a non-zero count after seeding. Exit with `\q`.
 
 ---
 
@@ -140,9 +146,16 @@ You should see 3 users, 2 support_threads, and 11 messages. Exit with `\q`.
 
 1. Copy env and set the database URL (default is local DB):
 
+   macOS / Linux:
    ```bash
    cd backend
    cp .env.example .env
+   ```
+
+   Windows (PowerShell):
+   ```powershell
+   cd backend
+   Copy-Item .env.example .env
    ```
 
    In `.env`, ensure:
@@ -159,9 +172,18 @@ You should see 3 users, 2 support_threads, and 11 messages. Exit with `\q`.
 
 2. Create a virtualenv, install dependencies, and run the app:
 
+   macOS / Linux:
    ```bash
-   python -m venv venv
-   source venv/bin/activate   # Windows: venv\Scripts\activate
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   flask run
+   ```
+
+   Windows (PowerShell):
+   ```powershell
+   py -m venv venv
+   .\venv\Scripts\Activate.ps1
    pip install -r requirements.txt
    flask run
    ```
@@ -169,7 +191,7 @@ You should see 3 users, 2 support_threads, and 11 messages. Exit with `\q`.
 3. In another terminal, hit the API to confirm the DB is used:
 
    ```bash
-   curl "http://localhost:5000/api/threads?user_id=1"
+   curl "http://localhost:5001/api/threads?user_id=1"
    ```
 
    You should get JSON with threads for user 1 (Rory). That confirms the local DB is set up and the app can read from it.
@@ -180,7 +202,7 @@ You should see 3 users, 2 support_threads, and 11 messages. Exit with `\q`.
 
 | Issue | What to try |
 |-------|-------------|
-| `createdb: command not found` | Add PostgreSQL `bin` to PATH (see macOS step 3 or Windows installer PATH option). |
+| `createdb: command not found` | Add PostgreSQL `bin` to PATH (see macOS step 3 or Windows installer PATH option). On Windows, you can also run with full path such as `"C:\Program Files\PostgreSQL\15\bin\createdb.exe" ...` |
 | `connection refused` / `could not connect` | Start the PostgreSQL service (`brew services start postgresql@15` on macOS; on Windows check Services for “postgresql”). |
 | `role "your_username" does not exist` (Windows) | Use `-U postgres` in `createdb` and `psql`, and set `DATABASE_URL` with user `postgres` and password in `.env`. |
 | `database "student_mental_support" does not exist` | Run `createdb student_mental_support` (or with `-U postgres` on Windows). |
@@ -196,3 +218,9 @@ You should see 3 users, 2 support_threads, and 11 messages. Exit with `\q`.
 | Schema | `psql -d student_mental_support -f backend/scripts/db/01_create_tables.sql` |
 | Seed | `psql -d student_mental_support -f backend/scripts/db/02_seed_data.sql` |
 | Connect | `psql -d student_mental_support` |
+
+Windows quick variants:
+
+- Create DB: `createdb -U postgres student_mental_support`
+- Schema: `psql -U postgres -d student_mental_support -f backend/scripts/db/01_create_tables.sql`
+- Seed: `psql -U postgres -d student_mental_support -f backend/scripts/db/02_seed_data.sql`
