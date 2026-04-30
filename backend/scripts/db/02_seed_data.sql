@@ -71,23 +71,73 @@ ON CONFLICT (id) DO NOTHING;
 -- Thread 6: Logan, low, last from counsellor -> REPLIED
 INSERT INTO messages (id, thread_id, sender_id, content) VALUES
   (18, 6, 12, 'I feel isolated in group projects and it is making me less motivated to attend seminars.'),
-  (19, 6, 4, 'That sounds really difficult. We can talk through some small steps to reconnect with your group and reduce the stress around seminars.')
+  (19, 6, 3, 'That sounds really difficult. We can talk through some small steps to reconnect with your group and reduce the stress around seminars.')
 ON CONFLICT (id) DO NOTHING;
 
 -- Counsellor rotas: Mon-Fri 9am-5pm only (8 slots per day: 9:00–16:00)
-\i backend/scripts/db/_rotas_gen.sql
+\ir _rotas_gen.sql
 
--- SESSION activities: Mar/Apr/May 2026 weekdays, 3 slots/day UK 9am-5pm, 1 counsellor per day (Mon=Sarah, Tue=James, Wed=Emily, Thu=David, Fri=Emily)
-\i backend/scripts/db/_sessions_gen.sql
+-- SESSION activities: Mar/Apr/May/Jun 2026 weekdays, 3 slots/day UK 9am-5pm, 1 counsellor per day (Mon=Sarah, Tue=James, Wed=Emily, Thu=David, Fri=Emily)
+\ir _sessions_gen.sql
 
--- WORKSHOP activities: 4 counsellors (3, 4, 5, 6) – ids 781+ to avoid conflict with SESSION ids 1-780
+-- SESSION activities (explicit seed rows for app flows expecting type='SESSION')
 INSERT INTO activities (id, type, title, start_time, duration_min, capacity, facilitator_id, location) VALUES
+  (901, 'SESSION', '1-on-1 Counselling', '2026-05-20 10:00:00+00', 50, 1, 3, 'Room 101'),
+  (902, 'SESSION', '1-on-1 Counselling', '2026-05-21 11:00:00+00', 50, 1, 4, 'Room 101'),
+  (903, 'SESSION', '1-on-1 Counselling', '2026-05-22 14:00:00+00', 50, 1, 5, 'Room 101'),
+  (904, 'SESSION', '1-on-1 Counselling', '2026-05-27 10:00:00+00', 50, 1, 6, 'Room 101'),
+  (905, 'SESSION', '1-on-1 Counselling', '2026-06-03 10:00:00+00', 50, 1, 3, 'Room 101'),
+  (906, 'SESSION', '1-on-1 Counselling', '2026-06-04 11:00:00+00', 50, 1, 4, 'Room 101'),
+  (907, 'SESSION', '1-on-1 Counselling', '2026-06-10 14:00:00+00', 50, 1, 5, 'Room 101'),
+  (908, 'SESSION', '1-on-1 Counselling', '2026-06-11 10:00:00+00', 50, 1, 6, 'Room 101'),
+  (909, 'SESSION', '1-on-1 Counselling', '2026-06-17 10:00:00+00', 50, 1, 3, 'Room 101'),
+  (910, 'SESSION', '1-on-1 Counselling', '2026-06-18 11:00:00+00', 50, 1, 4, 'Room 101')
+ON CONFLICT (id) DO UPDATE SET
+  type = EXCLUDED.type,
+  title = EXCLUDED.title,
+  start_time = EXCLUDED.start_time,
+  duration_min = EXCLUDED.duration_min,
+  capacity = EXCLUDED.capacity,
+  facilitator_id = EXCLUDED.facilitator_id,
+  location = EXCLUDED.location;
+
+-- WORKSHOP activities: Mar/Apr/May/Jun 2026
+INSERT INTO activities (id, type, title, start_time, duration_min, capacity, facilitator_id, location) VALUES
+  -- March
   (781, 'WORKSHOP', 'Mindfulness & Meditation',      '2026-03-12 10:00:00+00', 90, 20, 3, 'Main Hall'),
   (782, 'WORKSHOP', 'Exam Stress Relief',           '2026-03-15 15:30:00+00', 120, 25, 4, 'Room 302'),
   (783, 'WORKSHOP', 'Career Prep Group',            '2026-03-18 13:00:00+00', 90, 15, 5, 'Room 101'),
   (784, 'WORKSHOP', 'Sleep Hygiene Workshop',       '2026-03-22 14:00:00+00', 60, 12, 6, 'Room 205'),
-  (785, 'WORKSHOP', 'Anxiety Management',           '2026-03-25 11:00:00+00', 90, 18, 3, 'Main Hall')
-ON CONFLICT (id) DO NOTHING;
+  (785, 'WORKSHOP', 'Anxiety Management',           '2026-03-25 11:00:00+00', 90, 18, 3, 'Main Hall'),
+
+  -- April
+  (786, 'WORKSHOP', 'Mindfulness & Meditation',      '2026-04-09 10:00:00+00', 90, 20, 3, 'Main Hall'),
+  (787, 'WORKSHOP', 'Exam Stress Relief',           '2026-04-14 15:30:00+00', 120, 25, 4, 'Room 302'),
+  (788, 'WORKSHOP', 'Career Prep Group',            '2026-04-17 13:00:00+00', 90, 15, 5, 'Room 101'),
+  (789, 'WORKSHOP', 'Sleep Hygiene Workshop',       '2026-04-23 14:00:00+00', 60, 12, 6, 'Room 205'),
+  (790, 'WORKSHOP', 'Anxiety Management',           '2026-04-28 11:00:00+00', 90, 18, 3, 'Main Hall'),
+
+  -- May
+  (791, 'WORKSHOP', 'Mindfulness & Meditation',      '2026-05-12 10:00:00+00', 90, 20, 3, 'Main Hall'),
+  (792, 'WORKSHOP', 'Exam Stress Relief',           '2026-05-15 15:30:00+00', 120, 25, 4, 'Room 302'),
+  (793, 'WORKSHOP', 'Career Prep Group',            '2026-05-18 13:00:00+00', 90, 15, 5, 'Room 101'),
+  (794, 'WORKSHOP', 'Sleep Hygiene Workshop',       '2026-05-22 14:00:00+00', 60, 12, 6, 'Room 205'),
+  (795, 'WORKSHOP', 'Anxiety Management',           '2026-05-25 11:00:00+00', 90, 18, 3, 'Main Hall'),
+
+  -- June
+  (796, 'WORKSHOP', 'Mindfulness & Meditation',      '2026-06-09 10:00:00+00', 90, 20, 3, 'Main Hall'),
+  (797, 'WORKSHOP', 'Exam Stress Relief',           '2026-06-12 15:30:00+00', 120, 25, 4, 'Room 302'),
+  (798, 'WORKSHOP', 'Career Prep Group',            '2026-06-16 13:00:00+00', 90, 15, 5, 'Room 101'),
+  (799, 'WORKSHOP', 'Sleep Hygiene Workshop',       '2026-06-19 14:00:00+00', 60, 12, 6, 'Room 205'),
+  (800, 'WORKSHOP', 'Anxiety Management',           '2026-06-24 11:00:00+00', 90, 18, 3, 'Main Hall')
+ON CONFLICT (id) DO UPDATE SET
+  type = EXCLUDED.type,
+  title = EXCLUDED.title,
+  start_time = EXCLUDED.start_time,
+  duration_min = EXCLUDED.duration_min,
+  capacity = EXCLUDED.capacity,
+  facilitator_id = EXCLUDED.facilitator_id,
+  location = EXCLUDED.location;
 
 -- Bookings: CONFIRMED + CANCELLED (balanced: mixed times, 1–2 full days, rest sparse)
 INSERT INTO bookings (id, activity_id, student_id, status, cancelled_at) VALUES
@@ -148,8 +198,100 @@ INSERT INTO bookings (id, activity_id, student_id, status, cancelled_at) VALUES
   (55, 785, 9, 'CONFIRMED', NULL),
   (56, 5, 1, 'CANCELLED', '2026-03-01 12:00:00+00'),
   (57, 781, 9, 'CANCELLED', '2026-03-10 14:00:00+00'),
-  (58, 783, 13, 'CANCELLED', '2026-03-15 10:00:00+00')
-ON CONFLICT (id) DO NOTHING;
+  (58, 783, 13, 'CANCELLED', '2026-03-15 10:00:00+00'),
+  (59, 142, 11, 'CONFIRMED', NULL),
+  (60, 146, 12, 'CONFIRMED', NULL),
+  (61, 157, 13, 'CONFIRMED', NULL),
+  (62, 172, 14, 'CONFIRMED', NULL),
+  (63, 181, 15, 'CONFIRMED', NULL),
+  (64, 196, 16, 'CONFIRMED', NULL),
+  (65, 199, 1, 'CONFIRMED', NULL),
+  (66, 208, 2, 'CONFIRMED', NULL),
+  (67, 214, 7, 'CONFIRMED', NULL),
+  (68, 223, 8, 'CONFIRMED', NULL),
+  (69, 791, 11, 'CONFIRMED', NULL),
+  (70, 792, 12, 'CONFIRMED', NULL),
+  (71, 793, 13, 'CONFIRMED', NULL),
+  (72, 795, 14, 'CONFIRMED', NULL),
+  (73, 796, 15, 'CONFIRMED', NULL),
+  (74, 797, 16, 'CONFIRMED', NULL),
+  (75, 798, 11, 'CONFIRMED', NULL),
+  (76, 799, 12, 'CONFIRMED', NULL),
+  (77, 800, 13, 'CONFIRMED', NULL),
+  (78, 799, 14, 'CANCELLED', '2026-06-10 09:00:00+00'),
+  (79, 232, 9, 'CONFIRMED', NULL),
+  (80, 235, 10, 'CONFIRMED', NULL),
+  (81, 241, 11, 'CONFIRMED', NULL),
+  (82, 247, 12, 'CONFIRMED', NULL),
+  (83, 253, 15, 'CONFIRMED', NULL),
+  (84, 259, 16, 'CONFIRMED', NULL),
+  (85, 796, 1, 'CONFIRMED', NULL),
+  (86, 796, 2, 'CONFIRMED', NULL),
+  (87, 797, 7, 'CONFIRMED', NULL),
+  (88, 798, 8, 'CONFIRMED', NULL),
+  (89, 800, 9, 'CONFIRMED', NULL),
+  (90, 800, 10, 'CONFIRMED', NULL),
+  (91, 901, 1, 'CONFIRMED', NULL),
+  (92, 902, 2, 'CONFIRMED', NULL),
+  (93, 903, 7, 'CONFIRMED', NULL),
+  (94, 904, 8, 'CONFIRMED', NULL),
+  (95, 905, 9, 'CONFIRMED', NULL),
+  (96, 906, 10, 'CONFIRMED', NULL),
+  (97, 907, 11, 'CONFIRMED', NULL),
+  (98, 908, 12, 'CONFIRMED', NULL),
+  (99, 909, 13, 'CONFIRMED', NULL),
+  (100, 910, 14, 'CONFIRMED', NULL),
+  (101, 786, 1, 'CONFIRMED', NULL),
+  (102, 786, 2, 'CONFIRMED', NULL),
+  (103, 786, 7, 'CONFIRMED', NULL),
+  (104, 786, 8, 'CONFIRMED', NULL),
+  (105, 786, 9, 'CONFIRMED', NULL),
+  (106, 786, 10, 'CONFIRMED', NULL),
+  (107, 787, 1, 'CONFIRMED', NULL),
+  (108, 787, 2, 'CONFIRMED', NULL),
+  (109, 787, 7, 'CONFIRMED', NULL),
+  (110, 787, 8, 'CONFIRMED', NULL),
+  (111, 787, 9, 'CONFIRMED', NULL),
+  (112, 787, 10, 'CONFIRMED', NULL),
+  (113, 787, 11, 'CONFIRMED', NULL),
+  (114, 787, 12, 'CONFIRMED', NULL),
+  (115, 788, 11, 'CONFIRMED', NULL),
+  (116, 788, 12, 'CONFIRMED', NULL),
+  (117, 788, 13, 'CONFIRMED', NULL),
+  (118, 788, 14, 'CONFIRMED', NULL),
+  (119, 789, 15, 'CONFIRMED', NULL),
+  (120, 789, 16, 'CONFIRMED', NULL),
+  (121, 789, 1, 'CONFIRMED', NULL),
+  (122, 789, 2, 'CONFIRMED', NULL),
+  (123, 790, 11, 'CONFIRMED', NULL),
+  (124, 790, 12, 'CONFIRMED', NULL),
+  (125, 790, 13, 'CONFIRMED', NULL),
+  (126, 791, 1, 'CONFIRMED', NULL),
+  (127, 791, 2, 'CONFIRMED', NULL),
+  (128, 791, 7, 'CONFIRMED', NULL),
+  (129, 792, 8, 'CONFIRMED', NULL),
+  (130, 792, 9, 'CONFIRMED', NULL),
+  (131, 793, 10, 'CONFIRMED', NULL),
+  (132, 793, 11, 'CANCELLED', '2026-05-16 08:00:00+00'),
+  (133, 794, 12, 'CONFIRMED', NULL),
+  (134, 794, 13, 'CONFIRMED', NULL),
+  (135, 795, 15, 'CONFIRMED', NULL),
+  (136, 795, 16, 'CANCELLED', '2026-05-23 17:30:00+00'),
+  (137, 796, 7, 'CONFIRMED', NULL),
+  (138, 796, 8, 'CONFIRMED', NULL),
+  (139, 797, 9, 'CONFIRMED', NULL),
+  (140, 797, 10, 'CONFIRMED', NULL),
+  (141, 798, 14, 'CONFIRMED', NULL),
+  (142, 798, 15, 'CONFIRMED', NULL),
+  (143, 799, 16, 'CONFIRMED', NULL),
+  (144, 800, 1, 'CONFIRMED', NULL),
+  (145, 800, 2, 'CONFIRMED', NULL),
+  (146, 800, 7, 'CONFIRMED', NULL)
+ON CONFLICT (id) DO UPDATE SET
+  activity_id = EXCLUDED.activity_id,
+  student_id = EXCLUDED.student_id,
+  status = EXCLUDED.status,
+  cancelled_at = EXCLUDED.cancelled_at;
 
 -- FAQs
 INSERT INTO faqs (id, question, preview, answer, category) VALUES
