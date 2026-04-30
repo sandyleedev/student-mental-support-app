@@ -6,7 +6,7 @@ from app import db
 def compute_activity_status(start_time: datetime, duration_min: int) -> str:
     """Derive status from start_time and duration. UPCOMING | ONGOING | COMPLETED."""
     end_time = start_time + timedelta(minutes=duration_min)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc) if start_time.tzinfo else datetime.utcnow()
     if now < start_time:
         return "UPCOMING"
     if now < end_time:
